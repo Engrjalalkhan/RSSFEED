@@ -35,8 +35,8 @@ const Card = ({item}) => (
   </TouchableOpacity>
 );
 
-const SportsScreen = () => {
-  const [sportsData, setSportsData] = useState([]);
+const CommonScreen = () => {
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const token =
@@ -55,7 +55,7 @@ const SportsScreen = () => {
           },
         );
         console.log('success---->', response.data);
-        setSportsData(response?.data?.payload?.feeds?.data || []);
+        setData(response?.data?.payload?.feeds?.data || []);
       } catch (err) {
         console.log('Falied --->', err);
         setError('Failed to fetch data');
@@ -87,7 +87,7 @@ const SportsScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.gridContainer}>
-        {sportsData.map(item => (
+        {data.map(item => (
           <Card key={item.parma_link} item={item} />
         ))}
       </View>
@@ -157,4 +157,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SportsScreen;
+export default CommonScreen;
