@@ -15,38 +15,67 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 const RssFeedScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [id,setId]=useState(null);
+  const [id, setId] = useState(null);
   const [data, setData] = useState();
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiNzhkOTIxZGVhYzNkZmY1ZWU1ODExMTYwOTg5MDNjNTc0MWZiMmJiNTQ2ZWE5ZjgxMjdiYzE3MGU1Y2NmOWJkYmEyZDc3OWM5YmY2NWIwNjQiLCJpYXQiOjE3MzQ5MzMwMjIuOTMzNDUzLCJuYmYiOjE3MzQ5MzMwMjIuOTMzNDU3LCJleHAiOjE3NjY0NjkwMjIuOTE5NDI0LCJzdWIiOiIxNCIsInNjb3BlcyI6W119.B6auUlAWzTqDQddZuNILql0tmP2ktMkaAFqp047WGRZsJZMhIWhSU2CCv6UvwI9uQwR1yevszrcwWdnt8KEMFE1u_W3wVmai3AZM-y0rktM1dfOxgZNwCodyjcTobU2YgsJViuEv-0W6BsIk2rouyZHmFSMD84haRSi2SkIGYKxymBLzT8ikmLMNBEa_slNkmpCPmamTl-1wdYA_WbvO3lH71-OzByjrmpP5rRXI91sasTYn_Upn9E79DKDZfkktc9Qf8c-P5pdHjxZ1cGgw1VRGt6nt3XOiozH-gxn2NvncvTDTYlNF7Iys0UQ4_hcoj--5ikbg0h5o_2rJvKMOR-OgULa1V4G715itx4YTrl4duik4sVvU42IO5nvMhkKC19iRoe3l1ZSFR-4zEv0vxg-GYM-faTGOUvUj1LmiuA8ZOp8UJ3MjCuQ7ILa38oZV8qghAr2QzW9ONio8JIKKoV6mzEC9LIaQxLfrvoRpo2nrX3Ec3ECipw-gyerUb_dbhdSx1IdMhdyBcTv_Rh0oM4rae6dCOPx7TrmSpelUSzkTanC4gpzsgrZtKPymhvMVaMRlABTAIrec9Nh6sFRw80G1miZvRhWFxEFhMdDEhC57N3Kr_qm8SGrZZkm0_qujQV7l6G8zFQ5rmPxdwB19V59EwNNHtdQzJBGRideQ8uw';
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(
-          'http://192.168.18.127:8000/api/rss-feed/select-rss-feed',
-          {
-            headers: {
-              Authorization: 'Bearer ' + token,
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-        console.log('API Response DATA ------>:', response?.data);
-        setData(response?.data);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
+    const handleSave = async () => {
+  if (!id) {
+    console.log('No RSS Feed selected to save');
+    return;
+  }
 
+  try {
+    const response = await axios.post(
+      'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
+      { feed_id: id }, // Payload for the POST request
+      {
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (response?.data?.responseCode === 200) {
+      console.log('RSS Feed saved successfully:', response?.data);
+      setModalVisible(false); // Close the modal upon success
+    } else {
+      console.error('Failed to save RSS Feed:', response?.data?.message);
+    }
+  } catch (error) {
+    console.error('Error saving RSS Feed:', error);
+  }
+};
+
+  useEffect(() => {
     fetchCategories();
   }, []);
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(
+        'http://192.168.18.127:8000/api/rss-feed/select-rss-feed',
+        {
+          headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      console.log('API Response DATA ------>:', response?.data);
+      if (response?.data?.responseCode === 200) {
+        setData(response?.data?.payload?.feed_types);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const handleModalOpen = () => {
     console.log('Opening Modal');
-    setTimeout(() => {
-      setModalVisible(true);
-    }, 1000);
+
+    setModalVisible(true);
   };
 
   const handleModalClose = () => {
@@ -116,9 +145,9 @@ const RssFeedScreen = () => {
                 />
               </TouchableOpacity>
             </View>
-            {data?.payload?.feed_types.map(item => {
+            {data?.map(item => {
               return (
-                <View style={styles.categories}>
+                <View key={item.id} style={styles.categories}>
                   <TouchableOpacity
                     onPress={() => console.log(item.id)}
                     style={{height: 40}}>
