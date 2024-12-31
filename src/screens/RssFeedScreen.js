@@ -15,16 +15,18 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import CommonScreen from './CommonScreen';
 
-const RssFeedScreen = ({navigation}) => {
+const RssFeedScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]); // Array to store selected category ids
   const [data, setData] = useState([]);
+  const [showCommonScreen, setShowCommonScreen] = useState(false); // State to track if CommonScreen should be displayed
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
   const handleSave = async () => {
     if (selectedIds.length === 0) {
       console.log('No RSS Feed selected to save');
+      setShowCommonScreen(false); // Hide CommonScreen if no selection
       setModalVisible(false);
       return;
     }
@@ -42,17 +44,18 @@ const RssFeedScreen = ({navigation}) => {
       );
 
       if (response?.data?.responseCode === 200) {
+        setModalVisible(false);
+        setShowCommonScreen(true); // Show CommonScreen when data is saved
         console.log('RSS Feed saved successfully:', response?.data);
-        setModalVisible(false);
-
-        // After saving, navigate to the common screen and pass selectedIds as params
-        navigation.navigate('CommonScreen', {selectedIds});
       } else {
-        console.error('Failed to save RSS Feed:', response?.data?.message);
         setModalVisible(false);
+        setShowCommonScreen(false); // Hide CommonScreen if save fails
+        console.error('Failed to save RSS Feed:', response?.data?.message);
       }
     } catch (error) {
       console.error('Error saving RSS Feed:', error);
+      setModalVisible(false);
+      setShowCommonScreen(false); // Hide CommonScreen on error
     }
   };
 
@@ -130,8 +133,8 @@ const RssFeedScreen = ({navigation}) => {
       </View>
       <ScrollView>
         <View style={styles.defaultContainer}>
-          {selectedIds.length > 0 ? (
-            <View style={{flex:1,padding:5}}>
+          {showCommonScreen ? (
+            <View style={{flex: 1, padding: 5}}>
               <CommonScreen />
             </View>
           ) : (
@@ -269,7 +272,7 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   defaultContainer: {
-    paddingTop:20,
+    paddingTop: 20,
     alignItems: 'center',
   },
   iconContainer: {
