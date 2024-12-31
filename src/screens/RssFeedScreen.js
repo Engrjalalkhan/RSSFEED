@@ -13,25 +13,26 @@ import {
   Animated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import CommonScreen from './CommonScreen';
 
-const RssFeedScreen = () => {
+const RssFeedScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [id, setId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]); // Array to store selected category ids
   const [data, setData] = useState([]);
-  const [savedData, setSavedData] = useState(null);
   const token =
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTllNTUxNDM5ODM1MTg2ZmQyNjM2NmM0MWI2ZDRiNjNmZmFkN2E4MmVjMTcwNjZlOTMwM2Y1YTU3MGE0NmUyMjczMjdlZDk2YmI1ZTllODUiLCJpYXQiOjE3MzU1MzkyOTYuMDA1OTc4LCJuYmYiOjE3MzU1MzkyOTYuMDA1OTgyLCJleHAiOjE3NjcwNzUyOTUuNzc0NTE4LCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vyUJUi47Iu-UjzJC_Hu_dn4DOk7vKr7PnpKGPQZ8A8J9a_T1vL0uJl26SA9UIMG1OGJkp4wVC9t2LwdiNRMywq0Y5cTb1t15UYTuD6vyHCGTnVlqDcBEJAHF3G0kN0qysG6ySs0CIM06HuXWO0U69r46DLJ1sk1yvuFs1pRQEwOw2eA6OU6cMmn7R621EMnW5BMBs9YD7Castyh0tuQYk3rIPfaoLMxmW_fR6Vk6y2ayo10xvOsJGOcu3YNdNxM9rStpfRFgY0AbXfmuUq2Ef5wfE603KAc2LJukApNm4OSRglnmDx9IGqhotScxaBhlg84_2qtUTVIvJNbFj1OD3bQ9qqji2jgit5NWY-lgbLxKjWCzPsL__gQZkUOkGmzRd6txquMU77Toim9HXrXSh3yaL2sA4_b9iZQn_c5h6mtsDxWwuBpbt55rq_hrlHIAqY6gZGwCwT_iu9bsG3zahZkW7WrvVP-XlYOLl7wODo3HMDA-cs2_FFIg6uq2btM8BHKzLJeI_KKq5XDK6eIxMjUKjn_xBv9XBNnODD6gHdn2Dm13OKBIz4X2k2UGRfzhVa-kArsq0MfAX3uK0_iPI0EKf7sB8W9yoLnPCdCxYmHSVDtGrxr2ZCO3I1pvg5q6jrVFAWgt4eSJttZAyKOaA6Uzs7goGdVCoaSlchkRJs4';
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
   const handleSave = async () => {
-    if (!id) {
+    if (selectedIds.length === 0) {
       console.log('No RSS Feed selected to save');
+      setModalVisible(false);
       return;
     }
 
     try {
       const response = await axios.post(
         'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
-        {feed_id: id}, // Payload for the POST request
+        {selected_ids: selectedIds}, // Directly send the array as an object property
         {
           headers: {
             Authorization: 'Bearer ' + token,
@@ -43,9 +44,12 @@ const RssFeedScreen = () => {
       if (response?.data?.responseCode === 200) {
         console.log('RSS Feed saved successfully:', response?.data);
         setModalVisible(false);
-        fetchSavedFeedData(id);
+
+        // After saving, navigate to the common screen and pass selectedIds as params
+        navigation.navigate('CommonScreen', {selectedIds});
       } else {
         console.error('Failed to save RSS Feed:', response?.data?.message);
+        setModalVisible(false);
       }
     } catch (error) {
       console.error('Error saving RSS Feed:', error);
@@ -72,28 +76,14 @@ const RssFeedScreen = () => {
     }
   };
 
-  const fetchSavedFeedData = async feedId => {
-    try {
-      const response = await axios.get(
-        `http://192.168.18.127:8000/api/rss-feed/get-rss-feed/${feedId}`,
-        {
-          headers: {
-            Authorization: 'Bearer ' + token,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      if (response?.data?.responseCode === 200) {
-        setSavedData(response?.data?.payload); // Update state with saved feed data
+  const toggleCategorySelection = id => {
+    setSelectedIds(prevSelectedIds => {
+      if (prevSelectedIds.includes(id)) {
+        return prevSelectedIds.filter(itemId => itemId !== id); // Deselect the category
       } else {
-        console.error(
-          'Failed to fetch saved feed data:',
-          response?.data?.message,
-        );
+        return [...prevSelectedIds, id]; // Select the category
       }
-    } catch (error) {
-      console.error('Error fetching saved feed data:', error);
-    }
+    });
   };
 
   const handleModalOpen = () => {
@@ -140,15 +130,9 @@ const RssFeedScreen = () => {
       </View>
       <ScrollView>
         <View style={styles.defaultContainer}>
-          {savedData ? (
-            <View style={styles.savedDataContainer}>
-              <Text style={styles.savedDataText}>Saved Feed:</Text>
-              <Text style={styles.savedDataDetails}>
-                {savedData?.feed_name}
-              </Text>
-              <Text style={styles.savedDataDetails}>
-                {savedData?.description}
-              </Text>
+          {selectedIds.length > 0 ? (
+            <View style={{flex:1,padding:5}}>
+              <CommonScreen />
             </View>
           ) : (
             <View style={styles.defaultContainer}>
@@ -188,9 +172,22 @@ const RssFeedScreen = () => {
             {data?.map(item => (
               <View key={item.id} style={styles.categories}>
                 <TouchableOpacity
-                  onPress={() => setId(item.id)} // Set selected feed id
-                  style={{height: 40}}>
-                  <Text style={styles.categoriestext}>{item.feed_name}</Text>
+                  onPress={() => toggleCategorySelection(item.id)} // Toggle selection
+                  style={[
+                    {height: 40},
+                    selectedIds.includes(item.id)
+                      ? {backgroundColor: '#DF4B38'}
+                      : {backgroundColor: '#D8D8D8'},
+                  ]}>
+                  <Text
+                    style={[
+                      styles.categoriestext,
+                      selectedIds.includes(item.id)
+                        ? {color: 'white'}
+                        : {color: 'black'},
+                    ]}>
+                    {item.feed_name}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -272,7 +269,7 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   defaultContainer: {
-    marginTop: 100,
+    paddingTop:20,
     alignItems: 'center',
   },
   iconContainer: {
@@ -332,7 +329,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   categories: {
-    backgroundColor: '#D8D8D8',
     borderRadius: 5,
     width: '100%',
     alignSelf: 'flex-start',
@@ -340,7 +336,6 @@ const styles = StyleSheet.create({
   },
   categoriestext: {
     paddingTop: 7,
-    color: 'black',
     fontSize: 16,
     left: 20,
   },

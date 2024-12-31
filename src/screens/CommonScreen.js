@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useState, useEffect} from 'react';
 import {
   View,
@@ -7,14 +8,15 @@ import {
   StyleSheet,
   ScrollView,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import axios from 'axios';
 
-const RssFeedScreen = () => {
+const CommonScreen = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const token =
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiNzQ4YmVmYWQ1MWU5M2Q4NWM4M2NmNDFjNzQ5ZDQzMzM5MjdiMTg3NDQ3OGYwY2U0MzY0YjI3OWVkMTgwMTczMDNjNWM2MTQyYzc2N2UxYmUiLCJpYXQiOjE3MzU1NTAwNTAuMzM0NzUxLCJuYmYiOjE3MzU1NTAwNTAuMzM0NzU2LCJleHAiOjE3NjcwODYwNTAuMjQ4MDIsInN1YiI6IjE0Iiwic2NvcGVzIjpbXX0.Fpk998tlk2TYlM1glFpeNNM1S7JP5Y0F1FuV1vntXPV2AfasMl1nO0ix41bAhTQaDBLgkSbS_bDA1y8t6Nvm1GLskN9qHqlZ396piYmoKuabKUPXi2UkXTWlYalHUsshWRyP99zjjIZSvVLuQOlz_iRwqqnmcKIVAaTWpZ7YRkkjmRafFGnhLsVENu8uw89o9PRFqSZHCf2R2dNRlQIBokIwZD19TlocNvJ6PBrW5R7CA_ZFlwVJm43CBhVSDhXvWydq0xnci8mWtj8O-PoZ_iCqlZ9Nr5bG_5yofzBRIO9YTzp2JrO7jwJD5wkM-HTmP1_Evquu-uP-khzWLjX9GdA682LOicg7KwUfhJYDHzte9jKyAC8ssVDZB0lmQP389yBsUe0soT4p9syskAXqBHNOr1m9rAXo45iIRxXsppd6fW3MxD8WSJXT2lbTSHRtX6-f5CTuT0mWJKNILijB2HuNfW_VC2GbAbkF5G7fbdSFu-JAnsyTUJ4TWQBhQ-m1JiZa4hekOUuNfI3_Cc-ho_PnavDy7VI22FYo5Oss9R8RfCQlCRgjObQ_nQeQel-GtilXdhYUOSV_FVfkGDAhn7bPyudH_ipRLxV7w0pV6Ks6akThlJr2smgfM9b2i2ejAIoWJvnMdouXvwpWj5Fr0jfqefU_CxAoT4aS79Gpg-c';
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,12 +31,12 @@ const RssFeedScreen = () => {
           },
         );
         if (
-          response.data &&
-          response.data.payload &&
-          response.data.payload.feeds
+          response?.data &&
+          response?.data?.payload &&
+          response?.data?.payload?.feeds
         ) {
-          setData(response.data.payload.feeds.data);
-          console.log('Fetched Data:', response.data.payload.feeds.data);
+          setData(response?.data?.payload?.feeds?.data);
+          console.log('Fetched Data:', response?.data?.payload?.feeds?.data);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -49,12 +51,7 @@ const RssFeedScreen = () => {
   // Render each item as a card
   const renderCards = () => {
     return data.map((item, index) => (
-      <View
-        key={index}
-        style={[
-          styles.card,
-          // index % 2 === 0 ? styles.leftCard : styles.rightCard,
-        ]}>
+      <View key={index} style={styles.card}>
         <TouchableOpacity
           onPress={() => {
             if (item.parma_link) {
@@ -81,7 +78,9 @@ const RssFeedScreen = () => {
   };
 
   if (loading) {
-    return <Text>Loading...</Text>;
+    return (
+      <ActivityIndicator size={30} color="#DF4B38" style={{paddingTop: 10}} />
+    );
   }
 
   return (
@@ -94,7 +93,7 @@ const RssFeedScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    // padding: 10,
   },
   gridContainer: {
     flexDirection: 'row',
@@ -113,20 +112,17 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: '48%',
   },
-  // leftCard: {
-  //   marginRight: '2%',
-  // },
-  // rightCard: {
-  //   marginLeft: '2%',
-  // },
   image: {
     width: '100%',
     height: 150,
-    borderTopRightRadius: 5,
-    borderTopLeftRadius: 5,
+    borderTopRightRadius: 10,
+    borderTopLeftRadius: 10,
   },
   cardContent: {
-    // padding: 10,
+    borderWidth: 1,
+    borderColor: '#DF4B38',
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 10,
   },
   header: {
     fontSize: 16,
@@ -146,4 +142,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RssFeedScreen;
+export default CommonScreen;
