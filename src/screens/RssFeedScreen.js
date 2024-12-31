@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import axios from 'axios';
 import React, {useState, useEffect} from 'react';
 import {
@@ -16,42 +17,41 @@ import Icon from 'react-native-vector-icons/Ionicons';
 const RssFeedScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [id, setId] = useState(null);
-  const [data, setData] = useState();
+  const [data, setData] = useState([]);
+  const [savedData, setSavedData] = useState(null);
   const token =
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiNzhkOTIxZGVhYzNkZmY1ZWU1ODExMTYwOTg5MDNjNTc0MWZiMmJiNTQ2ZWE5ZjgxMjdiYzE3MGU1Y2NmOWJkYmEyZDc3OWM5YmY2NWIwNjQiLCJpYXQiOjE3MzQ5MzMwMjIuOTMzNDUzLCJuYmYiOjE3MzQ5MzMwMjIuOTMzNDU3LCJleHAiOjE3NjY0NjkwMjIuOTE5NDI0LCJzdWIiOiIxNCIsInNjb3BlcyI6W119.B6auUlAWzTqDQddZuNILql0tmP2ktMkaAFqp047WGRZsJZMhIWhSU2CCv6UvwI9uQwR1yevszrcwWdnt8KEMFE1u_W3wVmai3AZM-y0rktM1dfOxgZNwCodyjcTobU2YgsJViuEv-0W6BsIk2rouyZHmFSMD84haRSi2SkIGYKxymBLzT8ikmLMNBEa_slNkmpCPmamTl-1wdYA_WbvO3lH71-OzByjrmpP5rRXI91sasTYn_Upn9E79DKDZfkktc9Qf8c-P5pdHjxZ1cGgw1VRGt6nt3XOiozH-gxn2NvncvTDTYlNF7Iys0UQ4_hcoj--5ikbg0h5o_2rJvKMOR-OgULa1V4G715itx4YTrl4duik4sVvU42IO5nvMhkKC19iRoe3l1ZSFR-4zEv0vxg-GYM-faTGOUvUj1LmiuA8ZOp8UJ3MjCuQ7ILa38oZV8qghAr2QzW9ONio8JIKKoV6mzEC9LIaQxLfrvoRpo2nrX3Ec3ECipw-gyerUb_dbhdSx1IdMhdyBcTv_Rh0oM4rae6dCOPx7TrmSpelUSzkTanC4gpzsgrZtKPymhvMVaMRlABTAIrec9Nh6sFRw80G1miZvRhWFxEFhMdDEhC57N3Kr_qm8SGrZZkm0_qujQV7l6G8zFQ5rmPxdwB19V59EwNNHtdQzJBGRideQ8uw';
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTllNTUxNDM5ODM1MTg2ZmQyNjM2NmM0MWI2ZDRiNjNmZmFkN2E4MmVjMTcwNjZlOTMwM2Y1YTU3MGE0NmUyMjczMjdlZDk2YmI1ZTllODUiLCJpYXQiOjE3MzU1MzkyOTYuMDA1OTc4LCJuYmYiOjE3MzU1MzkyOTYuMDA1OTgyLCJleHAiOjE3NjcwNzUyOTUuNzc0NTE4LCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vyUJUi47Iu-UjzJC_Hu_dn4DOk7vKr7PnpKGPQZ8A8J9a_T1vL0uJl26SA9UIMG1OGJkp4wVC9t2LwdiNRMywq0Y5cTb1t15UYTuD6vyHCGTnVlqDcBEJAHF3G0kN0qysG6ySs0CIM06HuXWO0U69r46DLJ1sk1yvuFs1pRQEwOw2eA6OU6cMmn7R621EMnW5BMBs9YD7Castyh0tuQYk3rIPfaoLMxmW_fR6Vk6y2ayo10xvOsJGOcu3YNdNxM9rStpfRFgY0AbXfmuUq2Ef5wfE603KAc2LJukApNm4OSRglnmDx9IGqhotScxaBhlg84_2qtUTVIvJNbFj1OD3bQ9qqji2jgit5NWY-lgbLxKjWCzPsL__gQZkUOkGmzRd6txquMU77Toim9HXrXSh3yaL2sA4_b9iZQn_c5h6mtsDxWwuBpbt55rq_hrlHIAqY6gZGwCwT_iu9bsG3zahZkW7WrvVP-XlYOLl7wODo3HMDA-cs2_FFIg6uq2btM8BHKzLJeI_KKq5XDK6eIxMjUKjn_xBv9XBNnODD6gHdn2Dm13OKBIz4X2k2UGRfzhVa-kArsq0MfAX3uK0_iPI0EKf7sB8W9yoLnPCdCxYmHSVDtGrxr2ZCO3I1pvg5q6jrVFAWgt4eSJttZAyKOaA6Uzs7goGdVCoaSlchkRJs4';
 
-    const handleSave = async () => {
-  if (!id) {
-    console.log('No RSS Feed selected to save');
-    return;
-  }
-
-  try {
-    const response = await axios.post(
-      'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
-      { feed_id: id }, // Payload for the POST request
-      {
-        headers: {
-          Authorization: 'Bearer ' + token,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (response?.data?.responseCode === 200) {
-      console.log('RSS Feed saved successfully:', response?.data);
-      setModalVisible(false); // Close the modal upon success
-    } else {
-      console.error('Failed to save RSS Feed:', response?.data?.message);
+  const handleSave = async () => {
+    if (!id) {
+      console.log('No RSS Feed selected to save');
+      return;
     }
-  } catch (error) {
-    console.error('Error saving RSS Feed:', error);
-  }
-};
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+    try {
+      const response = await axios.post(
+        'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
+        {feed_id: id}, // Payload for the POST request
+        {
+          headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (response?.data?.responseCode === 200) {
+        console.log('RSS Feed saved successfully:', response?.data);
+        setModalVisible(false);
+        fetchSavedFeedData(id);
+      } else {
+        console.error('Failed to save RSS Feed:', response?.data?.message);
+      }
+    } catch (error) {
+      console.error('Error saving RSS Feed:', error);
+    }
+  };
+
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
@@ -72,18 +72,42 @@ const RssFeedScreen = () => {
     }
   };
 
-  const handleModalOpen = () => {
-    console.log('Opening Modal');
+  const fetchSavedFeedData = async feedId => {
+    try {
+      const response = await axios.get(
+        `http://192.168.18.127:8000/api/rss-feed/get-rss-feed/${feedId}`,
+        {
+          headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      if (response?.data?.responseCode === 200) {
+        setSavedData(response?.data?.payload); // Update state with saved feed data
+      } else {
+        console.error(
+          'Failed to fetch saved feed data:',
+          response?.data?.message,
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching saved feed data:', error);
+    }
+  };
 
+  const handleModalOpen = () => {
     setModalVisible(true);
   };
 
   const handleModalClose = () => {
-    console.log('Closing Modal');
     setModalVisible(false);
   };
-  // console.log(modalVisible);
-  console.log('--------', data);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -116,13 +140,29 @@ const RssFeedScreen = () => {
       </View>
       <ScrollView>
         <View style={styles.defaultContainer}>
-          <View style={styles.iconContainer}>
-            <Icon name="calendar" size={50} color="white" />
-          </View>
-          <Text style={styles.bodytext}>You have not created any reminder</Text>
-          <Text style={{fontSize: 14}}>
-            Created reminders will appear here.
-          </Text>
+          {savedData ? (
+            <View style={styles.savedDataContainer}>
+              <Text style={styles.savedDataText}>Saved Feed:</Text>
+              <Text style={styles.savedDataDetails}>
+                {savedData?.feed_name}
+              </Text>
+              <Text style={styles.savedDataDetails}>
+                {savedData?.description}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.defaultContainer}>
+              <View style={styles.iconContainer}>
+                <Icon name="calendar" size={50} color="white" />
+              </View>
+              <Text style={styles.bodytext}>
+                You have not created any reminder
+              </Text>
+              <Text style={{fontSize: 14}}>
+                Created reminders will appear here.
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -145,18 +185,16 @@ const RssFeedScreen = () => {
                 />
               </TouchableOpacity>
             </View>
-            {data?.map(item => {
-              return (
-                <View key={item.id} style={styles.categories}>
-                  <TouchableOpacity
-                    onPress={() => console.log(item.id)}
-                    style={{height: 40}}>
-                    <Text style={styles.categoriestext}>{item.feed_name}</Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
-            <TouchableOpacity style={styles.saveButton}>
+            {data?.map(item => (
+              <View key={item.id} style={styles.categories}>
+                <TouchableOpacity
+                  onPress={() => setId(item.id)} // Set selected feed id
+                  style={{height: 40}}>
+                  <Text style={styles.categoriestext}>{item.feed_name}</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
           </Animated.View>
@@ -234,7 +272,7 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   defaultContainer: {
-    marginTop: 150,
+    marginTop: 100,
     alignItems: 'center',
   },
   iconContainer: {
@@ -305,5 +343,19 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 16,
     left: 20,
+  },
+  savedDataContainer: {
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  savedDataText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  savedDataDetails: {
+    fontSize: 16,
+    marginTop: 10,
   },
 });

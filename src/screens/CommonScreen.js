@@ -1,46 +1,20 @@
-/* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
   Image,
-  StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
-  Linking,
+  StyleSheet,
   ScrollView,
+  Linking,
 } from 'react-native';
 import axios from 'axios';
 
-const Card = ({item}) => (
-  <TouchableOpacity
-    style={styles.card}
-    onPress={() => Linking.openURL(item.parma_link)}>
-    <Image source={{uri: item.thumbnail}} style={styles.image} />
-    <View style={{backgroundColor: '#DF4B38'}}>
-      <Text style={styles.header} numberOfLines={1} ellipsizeMode="tail">
-        {item.title}
-      </Text>
-    </View>
-    <View style={styles.cardContent}>
-      <Text style={styles.body} numberOfLines={3} ellipsizeMode="tail">
-        {item.desc}
-      </Text>
-      <View style={{flexDirection: 'row'}}>
-        <Text style={[styles.body]} numberOfLines={1} ellipsizeMode="tail">
-          {item.time}
-        </Text>
-      </View>
-    </View>
-  </TouchableOpacity>
-);
-
-const CommonScreen = () => {
+const RssFeedScreen = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const token =
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiNzhkOTIxZGVhYzNkZmY1ZWU1ODExMTYwOTg5MDNjNTc0MWZiMmJiNTQ2ZWE5ZjgxMjdiYzE3MGU1Y2NmOWJkYmEyZDc3OWM5YmY2NWIwNjQiLCJpYXQiOjE3MzQ5MzMwMjIuOTMzNDUzLCJuYmYiOjE3MzQ5MzMwMjIuOTMzNDU3LCJleHAiOjE3NjY0NjkwMjIuOTE5NDI0LCJzdWIiOiIxNCIsInNjb3BlcyI6W119.B6auUlAWzTqDQddZuNILql0tmP2ktMkaAFqp047WGRZsJZMhIWhSU2CCv6UvwI9uQwR1yevszrcwWdnt8KEMFE1u_W3wVmai3AZM-y0rktM1dfOxgZNwCodyjcTobU2YgsJViuEv-0W6BsIk2rouyZHmFSMD84haRSi2SkIGYKxymBLzT8ikmLMNBEa_slNkmpCPmamTl-1wdYA_WbvO3lH71-OzByjrmpP5rRXI91sasTYn_Upn9E79DKDZfkktc9Qf8c-P5pdHjxZ1cGgw1VRGt6nt3XOiozH-gxn2NvncvTDTYlNF7Iys0UQ4_hcoj--5ikbg0h5o_2rJvKMOR-OgULa1V4G715itx4YTrl4duik4sVvU42IO5nvMhkKC19iRoe3l1ZSFR-4zEv0vxg-GYM-faTGOUvUj1LmiuA8ZOp8UJ3MjCuQ7ILa38oZV8qghAr2QzW9ONio8JIKKoV6mzEC9LIaQxLfrvoRpo2nrX3Ec3ECipw-gyerUb_dbhdSx1IdMhdyBcTv_Rh0oM4rae6dCOPx7TrmSpelUSzkTanC4gpzsgrZtKPymhvMVaMRlABTAIrec9Nh6sFRw80G1miZvRhWFxEFhMdDEhC57N3Kr_qm8SGrZZkm0_qujQV7l6G8zFQ5rmPxdwB19V59EwNNHtdQzJBGRideQ8uw';
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiNzQ4YmVmYWQ1MWU5M2Q4NWM4M2NmNDFjNzQ5ZDQzMzM5MjdiMTg3NDQ3OGYwY2U0MzY0YjI3OWVkMTgwMTczMDNjNWM2MTQyYzc2N2UxYmUiLCJpYXQiOjE3MzU1NTAwNTAuMzM0NzUxLCJuYmYiOjE3MzU1NTAwNTAuMzM0NzU2LCJleHAiOjE3NjcwODYwNTAuMjQ4MDIsInN1YiI6IjE0Iiwic2NvcGVzIjpbXX0.Fpk998tlk2TYlM1glFpeNNM1S7JP5Y0F1FuV1vntXPV2AfasMl1nO0ix41bAhTQaDBLgkSbS_bDA1y8t6Nvm1GLskN9qHqlZ396piYmoKuabKUPXi2UkXTWlYalHUsshWRyP99zjjIZSvVLuQOlz_iRwqqnmcKIVAaTWpZ7YRkkjmRafFGnhLsVENu8uw89o9PRFqSZHCf2R2dNRlQIBokIwZD19TlocNvJ6PBrW5R7CA_ZFlwVJm43CBhVSDhXvWydq0xnci8mWtj8O-PoZ_iCqlZ9Nr5bG_5yofzBRIO9YTzp2JrO7jwJD5wkM-HTmP1_Evquu-uP-khzWLjX9GdA682LOicg7KwUfhJYDHzte9jKyAC8ssVDZB0lmQP389yBsUe0soT4p9syskAXqBHNOr1m9rAXo45iIRxXsppd6fW3MxD8WSJXT2lbTSHRtX6-f5CTuT0mWJKNILijB2HuNfW_VC2GbAbkF5G7fbdSFu-JAnsyTUJ4TWQBhQ-m1JiZa4hekOUuNfI3_Cc-ho_PnavDy7VI22FYo5Oss9R8RfCQlCRgjObQ_nQeQel-GtilXdhYUOSV_FVfkGDAhn7bPyudH_ipRLxV7w0pV6Ks6akThlJr2smgfM9b2i2ejAIoWJvnMdouXvwpWj5Fr0jfqefU_CxAoT4aS79Gpg-c';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,11 +28,16 @@ const CommonScreen = () => {
             },
           },
         );
-        console.log('success---->', response.data);
-        setData(response?.data?.payload?.feeds?.data || []);
-      } catch (err) {
-        console.log('Falied --->', err);
-        setError('Failed to fetch data');
+        if (
+          response.data &&
+          response.data.payload &&
+          response.data.payload.feeds
+        ) {
+          setData(response.data.payload.feeds.data);
+          console.log('Fetched Data:', response.data.payload.feeds.data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
@@ -67,36 +46,54 @@ const CommonScreen = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator color={'#DF4B38'} />
-        <Text style={{left: 10}}>Loading...</Text>
+  // Render each item as a card
+  const renderCards = () => {
+    return data.map((item, index) => (
+      <View
+        key={index}
+        style={[
+          styles.card,
+          // index % 2 === 0 ? styles.leftCard : styles.rightCard,
+        ]}>
+        <TouchableOpacity
+          onPress={() => {
+            if (item.parma_link) {
+              Linking.openURL(item.parma_link).catch(err =>
+                console.error('Error opening link:', err),
+              );
+            }
+          }}>
+          <Image source={{uri: item.thumbnail}} style={styles.image} />
+          <View style={styles.cardContent}>
+            <Text style={styles.header} numberOfLines={1}>
+              {item.title}
+            </Text>
+            <Text style={styles.body} numberOfLines={3}>
+              {item.desc}
+            </Text>
+            <Text style={styles.body} numberOfLines={1}>
+              {item.time}{' '}
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
-    );
-  }
+    ));
+  };
 
-  if (error) {
-    return (
-      <View style={styles.error}>
-        <Text>{error}</Text>
-      </View>
-    );
+  if (loading) {
+    return <Text>Loading...</Text>;
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.gridContainer}>
-        {data.map(item => (
-          <Card key={item.parma_link} item={item} />
-        ))}
-      </View>
+    <ScrollView style={styles.container}>
+      <View style={styles.gridContainer}>{renderCards()}</View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 10,
   },
   gridContainer: {
@@ -106,7 +103,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    marginBottom: 10,
+    marginBottom: 15,
     padding: 1,
     borderRadius: 10,
     shadowColor: '#000',
@@ -116,45 +113,37 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: '48%',
   },
+  // leftCard: {
+  //   marginRight: '2%',
+  // },
+  // rightCard: {
+  //   marginLeft: '2%',
+  // },
   image: {
     width: '100%',
     height: 150,
-    borderTopRightRadius: 10,
-    borderTopLeftRadius: 10,
+    borderTopRightRadius: 5,
+    borderTopLeftRadius: 5,
+  },
+  cardContent: {
+    // padding: 10,
   },
   header: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginVertical: 10,
-    padding: 5,
     color: 'white',
-    paddingLeft: 15,
-  },
-  cardContent: {
-    borderWidth: 1,
-    borderBottomRightRadius: 10,
-    borderBottomLeftRadius: 10,
-    borderColor: '#DF4B38',
-    padding: 5,
+    backgroundColor: '#DF4B38',
+    height: 40,
+    paddingTop: 7,
+    width: '100%',
+    padding: 10,
   },
   body: {
     fontSize: 14,
     color: 'black',
-    padding: 5,
-    paddingLeft: 10,
-    fontWeight: '500',
-  },
-  loader: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
-  },
-  error: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
+    marginBottom: 10,
+    padding: 10,
   },
 });
 
-export default CommonScreen;
+export default RssFeedScreen;
