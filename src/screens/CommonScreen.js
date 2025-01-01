@@ -30,13 +30,8 @@ const CommonScreen = () => {
             },
           },
         );
-        if (
-          response?.data &&
-          response?.data?.payload &&
-          response?.data?.payload?.feeds
-        ) {
-          setData(response?.data?.payload?.feeds?.data);
-          console.log('Fetched Data:', response?.data?.payload?.feeds?.data);
+        if (response?.data?.responseCode === 200) {
+          setData(response?.data?.payload?.feeds);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -93,7 +88,7 @@ const CommonScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // padding: 10,
+    padding: 10,
   },
   gridContainer: {
     flexDirection: 'row',

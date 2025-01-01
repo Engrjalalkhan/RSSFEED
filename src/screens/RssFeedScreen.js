@@ -11,55 +11,22 @@ import {
   Image,
   ScrollView,
   Animated,
+  ActivityIndicator,
+  Linking,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import CommonScreen from './CommonScreen';
 
 const RssFeedScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]); // Array to store selected category ids
   const [data, setData] = useState([]);
-  const [showCommonScreen, setShowCommonScreen] = useState(false); // State to track if CommonScreen should be displayed
+  const [rssData, setRssData] = useState([]);
+  const [loading, setloading] = useState(false);
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
-  const handleSave = async () => {
-    if (selectedIds.length === 0) {
-      console.log('No RSS Feed selected to save');
-      setShowCommonScreen(false); // Hide CommonScreen if no selection
-      setModalVisible(false);
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
-        {selected_ids: selectedIds}, // Directly send the array as an object property
-        {
-          headers: {
-            Authorization: 'Bearer ' + token,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      if (response?.data?.responseCode === 200) {
-        setModalVisible(false);
-        setShowCommonScreen(true); // Show CommonScreen when data is saved
-        console.log('RSS Feed saved successfully:', response?.data);
-      } else {
-        setModalVisible(false);
-        setShowCommonScreen(false); // Hide CommonScreen if save fails
-        console.error('Failed to save RSS Feed:', response?.data?.message);
-      }
-    } catch (error) {
-      console.error('Error saving RSS Feed:', error);
-      setModalVisible(false);
-      setShowCommonScreen(false); // Hide CommonScreen on error
-    }
-  };
-
   const fetchCategories = async () => {
+    setloading(true);
     try {
       const response = await axios.get(
         'http://192.168.18.127:8000/api/rss-feed/select-rss-feed',
@@ -70,9 +37,55 @@ const RssFeedScreen = () => {
           },
         },
       );
+
+      if (response?.data?.responseCode === 200) {
+        console.log('API Response DATA ------>:', response?.data);
+        setData(response?.data?.payload?.feed_types);
+        setloading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const RssfeedGetApi = async () => {
+    try {
+      const response = await axios.get(
+        'http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds',
+        {
+          headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      // console.log('API Response DATA ------>:', response?.data);
+      if (response?.data?.responseCode === 200) {
+        console.log('Rss index>>>>>>>>>', response?.data);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+  useEffect(() => {
+    RssfeedGetApi();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const response = await axios.post(
+        'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
+        {'selected_ids[]': '6'},
+        {
+          headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
       console.log('API Response DATA ------>:', response?.data);
       if (response?.data?.responseCode === 200) {
-        setData(response?.data?.payload?.feed_types);
+        console.log('DAta.............', response?.data);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -91,15 +104,46 @@ const RssFeedScreen = () => {
 
   const handleModalOpen = () => {
     setModalVisible(true);
+    fetchCategories();
   };
 
   const handleModalClose = () => {
     setModalVisible(false);
   };
+  // Render each item as a card
+  const renderCards = () => {
+    return rssData.map((item, index) => (
+      <View key={index} style={styles.card}>
+        <TouchableOpacity
+          onPress={() => {
+            if (item.parma_link) {
+              Linking.openURL(item.parma_link).catch(err =>
+                console.error('Error opening link:', err),
+              );
+            }
+          }}>
+          <Image source={{uri: item.thumbnail}} style={styles.thumbnail} />
+          <View style={styles.cardContent}>
+            <Text style={styles.title} numberOfLines={1}>
+              {item.title}
+            </Text>
+            <Text style={styles.body} numberOfLines={3}>
+              {item.desc}
+            </Text>
+            <Text style={styles.body} numberOfLines={1}>
+              {item.time}{' '}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    ));
+  };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  // if (loading) {
+  //   return (
+  //     <ActivityIndicator size={30} color="#DF4B38" style={{paddingTop: 10}} />
+  //   );
+  // }
 
   return (
     <View style={styles.container}>
@@ -133,23 +177,17 @@ const RssFeedScreen = () => {
       </View>
       <ScrollView>
         <View style={styles.defaultContainer}>
-          {showCommonScreen ? (
-            <View style={{flex: 1, padding: 5}}>
-              <CommonScreen />
+          <View style={styles.defaultContainer}>
+            <View style={styles.iconContainer}>
+              <Icon name="calendar" size={50} color="white" />
             </View>
-          ) : (
-            <View style={styles.defaultContainer}>
-              <View style={styles.iconContainer}>
-                <Icon name="calendar" size={50} color="white" />
-              </View>
-              <Text style={styles.bodytext}>
-                You have not created any reminder
-              </Text>
-              <Text style={{fontSize: 14}}>
-                Created reminders will appear here.
-              </Text>
-            </View>
-          )}
+            <Text style={styles.bodytext}>
+              You have not created any reminder
+            </Text>
+            <Text style={{fontSize: 14}}>
+              Created reminders will appear here.
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -172,6 +210,13 @@ const RssFeedScreen = () => {
                 />
               </TouchableOpacity>
             </View>
+            {loading && (
+              <ActivityIndicator
+                size={'large'}
+                color={'red'}
+                style={{margin: 30}}
+              />
+            )}
             {data?.map(item => (
               <View key={item.id} style={styles.categories}>
                 <TouchableOpacity
@@ -355,5 +400,50 @@ const styles = StyleSheet.create({
   savedDataDetails: {
     fontSize: 16,
     marginTop: 10,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  card: {
+    backgroundColor: '#fff',
+    marginBottom: 15,
+    padding: 1,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: {width: 0, height: 1},
+    shadowRadius: 3,
+    elevation: 5,
+    width: '48%',
+  },
+  thumbnail: {
+    width: '100%',
+    height: 150,
+    borderTopRightRadius: 10,
+    borderTopLeftRadius: 10,
+  },
+  cardContent: {
+    borderWidth: 1,
+    borderColor: '#DF4B38',
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 10,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    backgroundColor: '#DF4B38',
+    height: 40,
+    paddingTop: 7,
+    width: '100%',
+    padding: 10,
+  },
+  body: {
+    fontSize: 14,
+    color: 'black',
+    marginBottom: 10,
+    padding: 10,
   },
 });
