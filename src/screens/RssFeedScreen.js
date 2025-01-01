@@ -23,13 +23,10 @@ const RssFeedScreen = () => {
   const [data, setData] = useState([]);
   const [rssData, setRssData] = useState([]);
   const [loading, setloading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMoreData, setHasMoreData] = useState(true);
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
   const fetchCategories = async () => {
-    setloading(true);
     try {
       const response = await axios.get(
         'http://192.168.18.127:8000/api/rss-feed/select-rss-feed',
@@ -51,11 +48,10 @@ const RssFeedScreen = () => {
     }
   };
 
-  const RssfeedGetApi = async currentPage => {
-    setloading(true);
+  const RssfeedGetApi = async () => {
     try {
       const response = await axios.get(
-        `http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds&page=${currentPage}`,
+        'http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds',
         {
           headers: {
             Authorization: 'Bearer ' + token,
@@ -63,36 +59,25 @@ const RssFeedScreen = () => {
           },
         },
       );
-
       if (response?.data?.responseCode === 200) {
-        const newFeeds = response?.data?.payload?.feeds?.data || [];
-        if (newFeeds.length > 0) {
-          setRssData(prevData => [...prevData, ...newFeeds]);
-        } else {
-          setHasMoreData(false); // No more data to load
-        }
+        console.log('Rss index>>>>>>>>>', response?.data);
+        setRssData(response?.data?.payload?.feeds?.data);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setloading(false);
+      console.error('Error fetching categories:', error);
     }
   };
   useEffect(() => {
-    RssfeedGetApi(page);
-  }, [page]);
+    RssfeedGetApi();
+  }, [rssData]);
 
   const handleSave = async () => {
-    // const formData = new FormData()
-    // formData.append("selected_ids[]","4")
     try {
       const response = await axios.post(
         'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
         {
           selected_ids: selectedIds,
         },
-        // formData.append("privacy", privacyPickerValue);
-
         {
           headers: {
             Authorization: 'Bearer ' + token,
@@ -102,6 +87,7 @@ const RssFeedScreen = () => {
       );
       console.log('--=-=-=-=-=---->:', response?.data?.responseCode);
       if (response?.data?.responseCode === 200) {
+        setRssData([]);
         setModalVisible(false);
         RssfeedGetApi();
       }
@@ -179,7 +165,7 @@ const RssFeedScreen = () => {
       ) : (
         <FlatList
           data={rssData}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(index) => index.toString()}
           numColumns={2}
           renderItem={({item}) => (
             <View style={styles.cardContainer}>
@@ -209,16 +195,6 @@ const RssFeedScreen = () => {
               </TouchableOpacity>
             </View>
           )}
-          onEndReached={() => {
-            if (!loading && hasMoreData) {
-              setPage(prevPage => prevPage + 1);
-              RssfeedGetApi(page + 1);
-            }
-          }}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            loading && <ActivityIndicator size="large" color="#DF4B38" />
-          }
         />
       )}
 
@@ -253,7 +229,7 @@ const RssFeedScreen = () => {
                 <TouchableOpacity
                   onPress={() => toggleCategorySelection(item.id)} // Toggle selection
                   style={[
-                    {height: 40},
+                    {height: 40,borderRadius:5},
                     selectedIds.includes(item.id)
                       ? {backgroundColor: '#DF4B38'}
                       : {backgroundColor: '#D8D8D8'},
