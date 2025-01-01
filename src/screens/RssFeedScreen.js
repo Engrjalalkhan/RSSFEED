@@ -13,6 +13,7 @@ import {
   Animated,
   ActivityIndicator,
   Linking,
+  FlatList,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -22,6 +23,8 @@ const RssFeedScreen = () => {
   const [data, setData] = useState([]);
   const [rssData, setRssData] = useState([]);
   const [loading, setloading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMoreData, setHasMoreData] = useState(true);
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
@@ -48,10 +51,11 @@ const RssFeedScreen = () => {
     }
   };
 
-  const RssfeedGetApi = async () => {
+  const RssfeedGetApi = async currentPage => {
+    setloading(true);
     try {
       const response = await axios.get(
-        'http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds',
+        `http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds&page=${currentPage}`,
         {
           headers: {
             Authorization: 'Bearer ' + token,
@@ -59,23 +63,36 @@ const RssFeedScreen = () => {
           },
         },
       );
-      // console.log('API Response DATA ------>:', response?.data);
+
       if (response?.data?.responseCode === 200) {
-        console.log('Rss index>>>>>>>>>', response?.data);
+        const newFeeds = response?.data?.payload?.feeds?.data || [];
+        if (newFeeds.length > 0) {
+          setRssData(prevData => [...prevData, ...newFeeds]);
+        } else {
+          setHasMoreData(false); // No more data to load
+        }
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching data:', error);
+    } finally {
+      setloading(false);
     }
   };
   useEffect(() => {
-    RssfeedGetApi();
-  }, []);
+    RssfeedGetApi(page);
+  }, [page]);
 
   const handleSave = async () => {
+    // const formData = new FormData()
+    // formData.append("selected_ids[]","4")
     try {
       const response = await axios.post(
         'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
-        {'selected_ids[]': '6'},
+        {
+          selected_ids: selectedIds,
+        },
+        // formData.append("privacy", privacyPickerValue);
+
         {
           headers: {
             Authorization: 'Bearer ' + token,
@@ -83,9 +100,10 @@ const RssFeedScreen = () => {
           },
         },
       );
-      console.log('API Response DATA ------>:', response?.data);
+      console.log('--=-=-=-=-=---->:', response?.data?.responseCode);
       if (response?.data?.responseCode === 200) {
-        console.log('DAta.............', response?.data);
+        setModalVisible(false);
+        RssfeedGetApi();
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -111,39 +129,6 @@ const RssFeedScreen = () => {
     setModalVisible(false);
   };
   // Render each item as a card
-  const renderCards = () => {
-    return rssData.map((item, index) => (
-      <View key={index} style={styles.card}>
-        <TouchableOpacity
-          onPress={() => {
-            if (item.parma_link) {
-              Linking.openURL(item.parma_link).catch(err =>
-                console.error('Error opening link:', err),
-              );
-            }
-          }}>
-          <Image source={{uri: item.thumbnail}} style={styles.thumbnail} />
-          <View style={styles.cardContent}>
-            <Text style={styles.title} numberOfLines={1}>
-              {item.title}
-            </Text>
-            <Text style={styles.body} numberOfLines={3}>
-              {item.desc}
-            </Text>
-            <Text style={styles.body} numberOfLines={1}>
-              {item.time}{' '}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-    ));
-  };
-
-  // if (loading) {
-  //   return (
-  //     <ActivityIndicator size={30} color="#DF4B38" style={{paddingTop: 10}} />
-  //   );
-  // }
 
   return (
     <View style={styles.container}>
@@ -175,21 +160,67 @@ const RssFeedScreen = () => {
           />
         </View>
       </View>
-      <ScrollView>
-        <View style={styles.defaultContainer}>
+      {rssData?.length === 0 ? (
+        <ScrollView>
           <View style={styles.defaultContainer}>
-            <View style={styles.iconContainer}>
-              <Icon name="calendar" size={50} color="white" />
+            <View style={styles.defaultContainer}>
+              <View style={styles.iconContainer}>
+                <Icon name="calendar" size={50} color="white" />
+              </View>
+              <Text style={styles.bodytext}>
+                You have not created any reminder
+              </Text>
+              <Text style={{fontSize: 14}}>
+                Created reminders will appear here.
+              </Text>
             </View>
-            <Text style={styles.bodytext}>
-              You have not created any reminder
-            </Text>
-            <Text style={{fontSize: 14}}>
-              Created reminders will appear here.
-            </Text>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={rssData}
+          keyExtractor={(item, index) => index.toString()}
+          numColumns={2}
+          renderItem={({item}) => (
+            <View style={styles.cardContainer}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (item.parma_link) {
+                    Linking.openURL(item.parma_link).catch(err =>
+                      console.error('Error opening link:', err),
+                    );
+                  }
+                }}>
+                <Image
+                  source={{uri: item.thumbnail}}
+                  style={styles.thumbnail}
+                />
+                <View style={styles.cardContent}>
+                  <Text style={styles.title} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.body} numberOfLines={3}>
+                    {item.desc}
+                  </Text>
+                  <Text style={styles.body} numberOfLines={1}>
+                    {item.time}{' '}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+          onEndReached={() => {
+            if (!loading && hasMoreData) {
+              setPage(prevPage => prevPage + 1);
+              RssfeedGetApi(page + 1);
+            }
+          }}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loading && <ActivityIndicator size="large" color="#DF4B38" />
+          }
+        />
+      )}
 
       {/* Modal with zoom animation */}
       <Modal
@@ -406,16 +437,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  card: {
+  cardContainer: {
+    margin: 3,
+    borderRadius: 8,
     backgroundColor: '#fff',
-    marginBottom: 15,
-    padding: 1,
-    borderRadius: 10,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: {width: 0, height: 1},
-    shadowRadius: 3,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: {width: 0, height: 2},
     width: '48%',
   },
   thumbnail: {
