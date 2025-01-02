@@ -431,10 +431,11 @@ const styles = StyleSheet.create({
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '111%',
+    width: '113%',
     alignItems: 'center',
     marginBottom: 15,
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 1,
+    borderBottomColor:'lightgray',
     paddingBottom: 5,
   },
   modalHeaderText: {
