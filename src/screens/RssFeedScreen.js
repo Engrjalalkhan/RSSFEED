@@ -23,6 +23,9 @@ const RssFeedScreen = () => {
   const [data, setData] = useState([]);
   const [rssData, setRssData] = useState([]);
   const [loading, setloading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterData, setFilterData] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
@@ -45,6 +48,55 @@ const RssFeedScreen = () => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+  const handleSearch = async query => {
+    setSearchQuery(query); // Update the search query state
+    if (query.trim() === '') {
+      // Reset filterData when query is empty
+      setFilterData([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    setSearchLoading(true); // Start search loading
+    try {
+      const response = await axios.get(
+        'http://192.168.18.127:8000/api/rss-feed/search',
+        {
+          params: {search_value: query},
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (response?.data?.responseCode === 200) {
+        const feeds = response?.data?.payload?.feeds;
+
+        if (feeds && typeof feeds === 'object') {
+          const feedsArray = Object.values(feeds);
+          const filteredResults = feedsArray.filter(item => {
+            const titleMatch = item?.title
+              ?.toLowerCase()
+              ?.includes(query.toLowerCase());
+            const descriptionMatch = item?.desc
+              ?.toLowerCase()
+              ?.includes(query.toLowerCase());
+            return titleMatch || descriptionMatch;
+          });
+
+          setFilterData(filteredResults); // Update filterData with filtered results
+        } else {
+          setFilterData([]); // No matches found
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching filtered content:', error.message);
+      setFilterData([]); // Clear filterData on error
+    } finally {
+      setSearchLoading(false); // End search loading
     }
   };
 
@@ -143,10 +195,19 @@ const RssFeedScreen = () => {
             placeholder="Search RSS Feed..."
             placeholderTextColor={'gray'}
             style={styles.input}
+            value={searchQuery}
+            onChangeText={handleSearch}
           />
         </View>
       </View>
-      {rssData?.length === 0 ? (
+      {/* Conditionally render filtered or full RSS data */}
+      {searchLoading ? (
+        <ActivityIndicator
+          size="large"
+          color="#DF4B38"
+          style={{marginTop: 20}}
+        />
+      ) : rssData.length === 0 ? (
         <ScrollView>
           <View style={styles.defaultContainer}>
             <View style={styles.defaultContainer}>
@@ -164,8 +225,8 @@ const RssFeedScreen = () => {
         </ScrollView>
       ) : (
         <FlatList
-          data={rssData}
-          keyExtractor={(index) => index.toString()}
+          data={searchQuery.length === 0 ? rssData : filterData}
+          keyExtractor={(item, index) => `${index}-${item.id}`}
           numColumns={2}
           renderItem={({item}) => (
             <View style={styles.cardContainer}>
@@ -189,12 +250,13 @@ const RssFeedScreen = () => {
                     {item.desc}
                   </Text>
                   <Text style={styles.body} numberOfLines={1}>
-                    {item.time}{' '}
+                    {item.time}
                   </Text>
                 </View>
               </TouchableOpacity>
             </View>
           )}
+          columnWrapperStyle={styles.columnWrapper}
         />
       )}
 
@@ -229,7 +291,7 @@ const RssFeedScreen = () => {
                 <TouchableOpacity
                   onPress={() => toggleCategorySelection(item.id)} // Toggle selection
                   style={[
-                    {height: 40,borderRadius:5},
+                    {height: 40, borderRadius: 5},
                     selectedIds.includes(item.id)
                       ? {backgroundColor: '#DF4B38'}
                       : {backgroundColor: '#D8D8D8'},
@@ -422,7 +484,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     shadowOffset: {width: 0, height: 2},
-    width: '48%',
+    width: 180,
   },
   thumbnail: {
     width: '100%',
@@ -435,6 +497,7 @@ const styles = StyleSheet.create({
     borderColor: '#DF4B38',
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,
+    height: 170,
   },
   title: {
     fontSize: 16,
