@@ -293,7 +293,11 @@ const RssFeedScreen = () => {
           onEndReachedThreshold={1} // Trigger when 50% from the bottom
           ListFooterComponent={
             paginationLoading && (
-              <ActivityIndicator size="large" color="#DF4B38" style={{margin:20}}/>
+              <ActivityIndicator
+                size="large"
+                color="#DF4B38"
+                style={{margin: 20}}
+              />
             )
           }
         />
