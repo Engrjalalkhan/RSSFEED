@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 import axios from 'axios';
 import React, {useState, useEffect} from 'react';
@@ -27,6 +28,8 @@ const RssFeedScreen = () => {
   const [filterData, setFilterData] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [currentpage, setCurrentpage] = useState(1);
+  const [paginationLoading, setPaginationLoading] = useState(false);
+
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
@@ -80,10 +83,13 @@ const RssFeedScreen = () => {
   };
 
   const RssfeedGetApi = async () => {
-    setloading(true);
+    if (currentpage === 1) {
+      setloading(true); // Set loading to true for the first page
+    }
+
     try {
       const response = await axios.get(
-        'http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds&page=1',
+        `http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds&page=${currentpage}`, // Ensure the page number is sent in the request
         {
           headers: {
             Authorization: 'Bearer ' + token,
@@ -91,19 +97,35 @@ const RssFeedScreen = () => {
           },
         },
       );
+
       if (response?.data?.responseCode === 200) {
-        setRssData(response?.data?.payload?.feeds?.data);
-        setloading(false);
+        const newFeeds = response?.data?.payload?.feeds?.data || [];
+
+        // Filter out duplicate feeds based on unique `id`
+        const updatedFeeds = newFeeds.filter(
+          newFeed =>
+            !rssData.some(existingFeed => existingFeed.id === newFeed.id),
+        );
+
+        setRssData(prevData => [...prevData, ...updatedFeeds]); // Append only unique feeds
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching RSS feeds:', error);
+    } finally {
+      setloading(false); // Set loading to false when the call is complete
+      setPaginationLoading(false);
     }
   };
+
   useEffect(() => {
     RssfeedGetApi();
   }, [currentpage]);
-  const hanleloadmore = () => {
-    setCurrentpage(currentpage + 1);
+
+  const handleLoadMore = () => {
+    if (!loading && !paginationLoading) {
+      setPaginationLoading(true);
+      setCurrentpage(prevPage => prevPage + 1); // Increment the page number
+    }
   };
 
   const fetchCategories = async () => {
@@ -119,7 +141,6 @@ const RssFeedScreen = () => {
       );
 
       if (response?.data?.responseCode === 200) {
-        console.log(response?.data?.payload?.feed_types);
         setData(response?.data?.payload?.feed_types);
         setloading(false);
       }
@@ -143,6 +164,7 @@ const RssFeedScreen = () => {
         },
       );
       if (response?.data?.responseCode === 200) {
+        setCurrentpage(1);
         setRssData([]);
         setModalVisible(false);
         RssfeedGetApi();
@@ -231,7 +253,6 @@ const RssFeedScreen = () => {
         <ActivityIndicator size={'large'} color={'#DF4B38'} />
       ) : (
         <FlatList
-          onEndReached={() => hanleloadmore()}
           data={searchQuery.length === 0 ? rssData : filterData}
           keyExtractor={(item, index) => `${index}-${item.id}`}
           numColumns={2}
@@ -268,6 +289,13 @@ const RssFeedScreen = () => {
             </View>
           )}
           columnWrapperStyle={styles.columnWrapper}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={1} // Trigger when 50% from the bottom
+          ListFooterComponent={
+            paginationLoading && (
+              <ActivityIndicator size="large" color="#DF4B38" style={{margin:20}}/>
+            )
+          }
         />
       )}
 
@@ -300,7 +328,7 @@ const RssFeedScreen = () => {
               data?.map(item => (
                 <View key={item.id} style={styles.categories}>
                   <TouchableOpacity
-                    onPress={() => toggleCategorySelection(item.id)} // Toggle selection
+                    onPress={() => toggleCategorySelection(item.id)}
                     style={[
                       {height: 40, borderRadius: 5},
                       selectedIds.includes(item.id) || item.is_selected
@@ -435,7 +463,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor:'lightgray',
+    borderBottomColor: 'lightgray',
     paddingBottom: 5,
   },
   modalHeaderText: {
