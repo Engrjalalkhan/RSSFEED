@@ -185,14 +185,15 @@ const RssFeedScreen = () => {
   };
 
   const handleModalOpen = () => {
+    setSelectedIds([...selectedIds]);
     setModalVisible(true);
     fetchCategories();
   };
 
   const handleModalClose = () => {
+    setSelectedIds([]);
     setModalVisible(false);
   };
-  // Render each item as a card
 
   return (
     <View style={styles.container}>
@@ -290,7 +291,7 @@ const RssFeedScreen = () => {
           )}
           columnWrapperStyle={styles.columnWrapper}
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={1} // Trigger when 50% from the bottom
+          onEndReachedThreshold={0.5} // Trigger when 50% from the bottom
           ListFooterComponent={
             paginationLoading && (
               <ActivityIndicator
