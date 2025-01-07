@@ -79,7 +79,7 @@ const RssFeedScreen = () => {
         setSearchLoading(false);
       }
     } catch (error) {
-      console.error('Error fetching filtered content:', error.message);
+      console.log('Error fetching filtered content:', error.message);
       setFilterData([]);
     } finally {
       setSearchLoading(false);
@@ -114,7 +114,7 @@ const RssFeedScreen = () => {
         setRssData(prevData => [...prevData, ...updatedFeeds]); // Append only unique feeds
       }
     } catch (error) {
-      console.error('Error fetching RSS feeds:', error);
+      console.log('Error fetching RSS feeds:', error);
     } finally {
       setloading(false); // Set loading to false when the call is complete
       setPaginationLoading(false);
@@ -149,7 +149,7 @@ const RssFeedScreen = () => {
         setloading(false);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.log('Error fetching categories:', error);
     }
   };
 
@@ -176,7 +176,7 @@ const RssFeedScreen = () => {
         setSearchQuery('');
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.log('Error fetching categories:', error);
     } finally {
       setSaveLoading(false);
     }
@@ -247,7 +247,14 @@ const RssFeedScreen = () => {
         />
       ) : searchQuery.length > 0 && filterData.length === 0 ? (
         <View style={styles.noResultContainer}>
-          <Text style={styles.noResultText}>No result found</Text>
+          <Image
+            source={require('../assets/icon/nosearch.png')}
+            style={{width: 30, height: 40}}
+          />
+          <Text style={styles.noResultText}>No Record Found</Text>
+          <Text style={{fontSize: 14, color: 'gray'}}>
+            What you searched was unfortunately not found.
+          </Text>
         </View>
       ) : rssData.length === 0 && !loading ? (
         <ScrollView>
@@ -392,6 +399,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: 'white',
   },
   header: {
     backgroundColor: '#DF4B38',
