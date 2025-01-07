@@ -12,11 +12,12 @@ import {
   Image,
   ScrollView,
   Animated,
-  ActivityIndicator,
   Linking,
   FlatList,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import CustomLoadingSpinner from '../components/cutomeloader';
+import Saveloader from '../components/saveloader';
 
 const RssFeedScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -240,11 +241,7 @@ const RssFeedScreen = () => {
       </View>
       {/* Conditionally render filtered or full RSS data */}
       {searchLoading ? (
-        <ActivityIndicator
-          size="large"
-          color="#DF4B38"
-          style={{marginTop: 20}}
-        />
+        <CustomLoadingSpinner />
       ) : searchQuery.length > 0 && filterData.length === 0 ? (
         <View style={styles.noResultContainer}>
           <Image
@@ -273,7 +270,7 @@ const RssFeedScreen = () => {
           </View>
         </ScrollView>
       ) : loading ? (
-        <ActivityIndicator size={'large'} color={'#DF4B38'} />
+        <CustomLoadingSpinner />
       ) : (
         <FlatList
           data={searchQuery.length === 0 ? rssData : filterData}
@@ -314,15 +311,7 @@ const RssFeedScreen = () => {
           columnWrapperStyle={styles.columnWrapper}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5} // Trigger when 50% from the bottom
-          ListFooterComponent={
-            paginationLoading && (
-              <ActivityIndicator
-                size="large"
-                color="#DF4B38"
-                style={{margin: 20}}
-              />
-            )
-          }
+          ListFooterComponent={paginationLoading && <CustomLoadingSpinner />}
         />
       )}
 
@@ -346,11 +335,7 @@ const RssFeedScreen = () => {
               </TouchableOpacity>
             </View>
             {data.length === 0 ? (
-              <ActivityIndicator
-                size={'large'}
-                color={'red'}
-                style={{margin: 30}}
-              />
+              <CustomLoadingSpinner />
             ) : (
               data.map(item => (
                 <View key={item.id} style={styles.categories}>
@@ -381,7 +366,7 @@ const RssFeedScreen = () => {
               disabled={saveLoading} // Disable button during save
             >
               {saveLoading ? (
-                <ActivityIndicator size="small" color="white" />
+                <Saveloader />
               ) : (
                 <Text style={styles.saveButtonText}>Save</Text>
               )}
