@@ -177,17 +177,19 @@ const RssFeedScreen = () => {
   const toggleCategorySelection = id => {
     setSelectedIds(prevSelectedIds => {
       if (prevSelectedIds.includes(id)) {
-        return prevSelectedIds.filter(itemId => itemId !== id); // Deselect the category
+        // Deselect the category
+        return prevSelectedIds.filter(itemId => itemId !== id);
       } else {
-        return [...prevSelectedIds, id]; // Select the category
+        // Select the category
+        return [...prevSelectedIds, id];
       }
     });
   };
 
   const handleModalOpen = () => {
-    setSelectedIds([...selectedIds]);
+    setSelectedIds([...selectedIds]); // Ensure the modal opens with the current selection
     setModalVisible(true);
-    fetchCategories();
+    fetchCategories(); // Fetch categories when the modal opens
   };
 
   const handleModalClose = () => {
@@ -330,20 +332,20 @@ const RssFeedScreen = () => {
                 style={{margin: 30}}
               />
             ) : (
-              data?.map(item => (
+              data.map(item => (
                 <View key={item.id} style={styles.categories}>
                   <TouchableOpacity
                     onPress={() => toggleCategorySelection(item.id)}
                     style={[
                       {height: 40, borderRadius: 5},
-                      selectedIds.includes(item.id) || item.is_selected
+                      selectedIds.includes(item.id)
                         ? {backgroundColor: '#DF4B38'}
                         : {backgroundColor: '#D8D8D8'},
                     ]}>
                     <Text
                       style={[
                         styles.categoriestext,
-                        selectedIds.includes(item.id) || item.is_selected
+                        selectedIds.includes(item.id)
                           ? {color: 'white'}
                           : {color: 'black'},
                       ]}>
@@ -353,7 +355,6 @@ const RssFeedScreen = () => {
                 </View>
               ))
             )}
-
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
