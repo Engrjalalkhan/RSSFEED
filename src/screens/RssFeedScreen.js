@@ -29,6 +29,7 @@ const RssFeedScreen = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [currentpage, setCurrentpage] = useState(1);
   const [paginationLoading, setPaginationLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
 
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
@@ -40,8 +41,10 @@ const RssFeedScreen = () => {
       setSearchLoading(false);
       return;
     }
+    if (searchQuery) {
+      setSearchLoading(true);
+    }
 
-    setSearchLoading(true);
     try {
       const response = await axios.get(
         'http://192.168.18.127:8000/api/rss-feed/search',
@@ -73,6 +76,7 @@ const RssFeedScreen = () => {
         } else {
           setFilterData([]);
         }
+        setSearchLoading(false);
       }
     } catch (error) {
       console.error('Error fetching filtered content:', error.message);
@@ -122,7 +126,7 @@ const RssFeedScreen = () => {
   }, [currentpage]);
 
   const handleLoadMore = () => {
-    if (!loading && !paginationLoading) {
+    if (!loading && !paginationLoading && !searchQuery) {
       setPaginationLoading(true);
       setCurrentpage(prevPage => prevPage + 1); // Increment the page number
     }
@@ -150,6 +154,7 @@ const RssFeedScreen = () => {
   };
 
   const handleSave = async () => {
+    setSaveLoading(true);
     try {
       const response = await axios.post(
         'http://192.168.18.127:8000/api/rss-feed/save-rss-feed',
@@ -168,9 +173,12 @@ const RssFeedScreen = () => {
         setRssData([]);
         setModalVisible(false);
         RssfeedGetApi();
+        setSearchQuery('');
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+    } finally {
+      setSaveLoading(false);
     }
   };
 
@@ -184,6 +192,7 @@ const RssFeedScreen = () => {
         return [...prevSelectedIds, id];
       }
     });
+    setSearchQuery(''); // Reset search query
   };
 
   const handleModalOpen = () => {
@@ -236,6 +245,10 @@ const RssFeedScreen = () => {
           color="#DF4B38"
           style={{marginTop: 20}}
         />
+      ) : searchQuery.length > 0 && filterData.length === 0 ? (
+        <View style={styles.noResultContainer}>
+          <Text style={styles.noResultText}>No result found</Text>
+        </View>
       ) : rssData.length === 0 && !loading ? (
         <ScrollView>
           <View style={styles.defaultContainer}>
@@ -338,14 +351,14 @@ const RssFeedScreen = () => {
                     onPress={() => toggleCategorySelection(item.id)}
                     style={[
                       {height: 40, borderRadius: 5},
-                      selectedIds.includes(item.id)
+                      selectedIds.includes(item.id) || item.is_selected
                         ? {backgroundColor: '#DF4B38'}
                         : {backgroundColor: '#D8D8D8'},
                     ]}>
                     <Text
                       style={[
                         styles.categoriestext,
-                        selectedIds.includes(item.id)
+                        selectedIds.includes(item.id) || item.is_selected
                           ? {color: 'white'}
                           : {color: 'black'},
                       ]}>
@@ -355,8 +368,16 @@ const RssFeedScreen = () => {
                 </View>
               ))
             )}
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>Save</Text>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSave}
+              disabled={saveLoading} // Disable button during save
+            >
+              {saveLoading ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save</Text>
+              )}
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -567,5 +588,15 @@ const styles = StyleSheet.create({
     margin: 10,
     width: 360,
     alignSelf: 'flex-start',
+  },
+  noResultContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  noResultText: {
+    fontSize: 16,
+    color: '#888',
+    fontWeight: 'bold',
   },
 });
