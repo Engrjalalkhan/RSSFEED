@@ -37,7 +37,7 @@ const RssFeedScreen = () => {
   //Search Query API logic
   const handleSearch = async query => {
     setSearchQuery(query);
-      if (query.trim() === '') {
+    if (query.trim() === '') {
       setFilterData([]);
       setSearchLoading(false);
       return;
