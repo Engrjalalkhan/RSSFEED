@@ -14,10 +14,9 @@ import {
   Animated,
   Linking,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import CustomLoadingSpinner from '../components/cutomeloader';
-import Saveloader from '../components/saveloader';
 
 const RssFeedScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -27,17 +26,18 @@ const RssFeedScreen = () => {
   const [loading, setloading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterData, setFilterData] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(true);
   const [currentpage, setCurrentpage] = useState(1);
   const [paginationLoading, setPaginationLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [lastpage, setLastpage] = useState();
 
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
-
+  //Search Query API logic
   const handleSearch = async query => {
     setSearchQuery(query);
-    if (query.trim() === '') {
+      if (query.trim() === '') {
       setFilterData([]);
       setSearchLoading(false);
       return;
@@ -87,9 +87,10 @@ const RssFeedScreen = () => {
     }
   };
 
+  //All Feeds API logic with the pagination
   const RssfeedGetApi = async () => {
     if (currentpage === 1) {
-      setloading(true); // Set loading to true for the first page
+      setloading(true);
     }
 
     try {
@@ -105,6 +106,7 @@ const RssFeedScreen = () => {
 
       if (response?.data?.responseCode === 200) {
         const newFeeds = response?.data?.payload?.feeds?.data || [];
+        setLastpage(response?.data?.payload?.feeds?.last_page);
 
         // Filter out duplicate feeds based on unique `id`
         const updatedFeeds = newFeeds.filter(
@@ -126,13 +128,20 @@ const RssFeedScreen = () => {
     RssfeedGetApi();
   }, [currentpage]);
 
+  //Loader for the pagination at the flat list
   const handleLoadMore = () => {
-    if (!loading && !paginationLoading && !searchQuery) {
+    if (
+      !loading &&
+      !paginationLoading &&
+      !searchQuery &&
+      currentpage < lastpage
+    ) {
       setPaginationLoading(true);
       setCurrentpage(prevPage => prevPage + 1); // Increment the page number
     }
   };
 
+  //logic for the get fetching the categogriess from the API
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
@@ -154,6 +163,7 @@ const RssFeedScreen = () => {
     }
   };
 
+  //Post categories ids logic for the API to get data of categories
   const handleSave = async () => {
     setSaveLoading(true);
     try {
@@ -183,6 +193,7 @@ const RssFeedScreen = () => {
     }
   };
 
+  //Ids base selection of the categories
   const toggleCategorySelection = id => {
     setSelectedIds(prevSelectedIds => {
       if (prevSelectedIds.includes(id)) {
@@ -196,12 +207,14 @@ const RssFeedScreen = () => {
     setSearchQuery(''); // Reset search query
   };
 
+  //Modal open logic
   const handleModalOpen = () => {
     setSelectedIds([...selectedIds]); // Ensure the modal opens with the current selection
     setModalVisible(true);
     fetchCategories(); // Fetch categories when the modal opens
   };
 
+  //Modal closing logic
   const handleModalClose = () => {
     setSelectedIds([]);
     setModalVisible(false);
@@ -209,9 +222,11 @@ const RssFeedScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Header text  */}
       <View style={styles.header}>
         <Text style={styles.headertext}>Palsome</Text>
       </View>
+      {/* Back button, Rss Feed text and Modal button */}
       <View style={styles.rowContainer}>
         <TouchableOpacity>
           <Image
@@ -227,6 +242,7 @@ const RssFeedScreen = () => {
           />
         </TouchableOpacity>
       </View>
+      {/*Search Box for the searching of Queries*/}
       <View style={styles.searchbox}>
         <View style={styles.inputContainer}>
           <Icon name="search" size={20} color="gray" style={styles.icon} />
@@ -241,7 +257,7 @@ const RssFeedScreen = () => {
       </View>
       {/* Conditionally render filtered or full RSS data */}
       {searchLoading ? (
-        <CustomLoadingSpinner />
+        <ActivityIndicator size={'large'} color={'#DF4B38'} />
       ) : searchQuery.length > 0 && filterData.length === 0 ? (
         <View style={styles.noResultContainer}>
           <Image
@@ -255,6 +271,7 @@ const RssFeedScreen = () => {
         </View>
       ) : rssData.length === 0 && !loading ? (
         <ScrollView>
+          {/* remainder icon and text on the body */}
           <View style={styles.defaultContainer}>
             <View style={styles.defaultContainer}>
               <View style={styles.iconContainer}>
@@ -270,7 +287,7 @@ const RssFeedScreen = () => {
           </View>
         </ScrollView>
       ) : loading ? (
-        <CustomLoadingSpinner />
+        <ActivityIndicator size={'large'} color={'#DF4B38'} />
       ) : (
         <FlatList
           data={searchQuery.length === 0 ? rssData : filterData}
@@ -311,7 +328,11 @@ const RssFeedScreen = () => {
           columnWrapperStyle={styles.columnWrapper}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5} // Trigger when 50% from the bottom
-          ListFooterComponent={paginationLoading && <CustomLoadingSpinner />}
+          ListFooterComponent={
+            paginationLoading && (
+              <ActivityIndicator size={'large'} color={'#DF4B38'} />
+            )
+          }
         />
       )}
 
@@ -335,7 +356,11 @@ const RssFeedScreen = () => {
               </TouchableOpacity>
             </View>
             {data.length === 0 ? (
-              <CustomLoadingSpinner />
+              <ActivityIndicator
+                size={'large'}
+                color={'#DF4B38'}
+                style={{margin: 30}}
+              />
             ) : (
               data.map(item => (
                 <View key={item.id} style={styles.categories}>
@@ -366,7 +391,7 @@ const RssFeedScreen = () => {
               disabled={saveLoading} // Disable button during save
             >
               {saveLoading ? (
-                <Saveloader />
+                <ActivityIndicator size={'small'} color={'white'} />
               ) : (
                 <Text style={styles.saveButtonText}>Save</Text>
               )}
