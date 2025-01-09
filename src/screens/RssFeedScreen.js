@@ -38,8 +38,8 @@ const RssFeedScreen = () => {
   const handleSearch = async query => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setFilterData([]);
       setSearchLoading(false);
+      setFilterData([]);
       return;
     }
     if (searchQuery) {
@@ -73,11 +73,13 @@ const RssFeedScreen = () => {
             return titleMatch || descriptionMatch;
           });
 
-          setFilterData(filteredResults);
-          setSearchLoading(false);
+          if (filteredResults.length > 0) {
+            setFilterData(filteredResults);
+          } else {
+            setFilterData([]);
+          }
         } else {
           setFilterData([]);
-          setSearchLoading(false);
         }
       }
     } catch (error) {
