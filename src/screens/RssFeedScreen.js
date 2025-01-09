@@ -12,9 +12,9 @@ import {
   Image,
   ScrollView,
   Animated,
+  ActivityIndicator,
   Linking,
   FlatList,
-  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -26,77 +26,24 @@ const RssFeedScreen = () => {
   const [loading, setloading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterData, setFilterData] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [currentpage, setCurrentpage] = useState(1);
   const [paginationLoading, setPaginationLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
-  const [lastpage, setLastpage] = useState();
+  const [lastpage, setLastpage] = useState(false);
 
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
-  //All Feeds API logic with the pagination
-  const RssfeedGetApi = async () => {
-    if (currentpage === 1) {
-      setloading(true);
-    }
 
-    try {
-      const response = await axios.get(
-        `http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds&page=${currentpage}`, // Ensure the page number is sent in the request
-        {
-          headers: {
-            Authorization: 'Bearer ' + token,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      if (response?.data?.responseCode === 200) {
-        const newFeeds = response?.data?.payload?.feeds?.data || [];
-        setLastpage(response?.data?.payload?.feeds?.last_page);
-
-        // Filter out duplicate feeds based on unique `id`
-        const updatedFeeds = newFeeds.filter(
-          newFeed =>
-            !rssData.some(existingFeed => existingFeed.id === newFeed.id),
-        );
-
-        setRssData(prevData => [...prevData, ...updatedFeeds]); // Append only unique feeds
-      }
-    } catch (error) {
-      console.log('Error fetching RSS feeds:', error);
-    } finally {
-      setloading(false); // Set loading to false when the call is complete
-      setPaginationLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    RssfeedGetApi();
-  }, [currentpage]);
-
-  //Loader for the pagination at the flat list
-  const handleLoadMore = () => {
-    if (
-      !loading &&
-      !paginationLoading &&
-      !searchQuery &&
-      currentpage < lastpage
-    ) {
-      setPaginationLoading(true);
-      setCurrentpage(prevPage => prevPage + 1); // Increment the page number
-    }
-  };
-    //Search Query API logic
   const handleSearch = async query => {
     setSearchQuery(query);
+    if (searchQuery) {
+      setSearchLoading(true);
+    }
     if (query.trim() === '') {
       setFilterData([]);
       setSearchLoading(false);
       return;
-    }
-    if (searchQuery) {
-      setSearchLoading(true);
     }
 
     try {
@@ -114,7 +61,7 @@ const RssFeedScreen = () => {
       if (response?.data?.responseCode === 200) {
         const feeds = response?.data?.payload?.feeds;
 
-        if (feeds && typeof feeds === 'object') {
+        if (feeds?.length > 0) {
           const feedsArray = Object.values(feeds);
           const filteredResults = feedsArray.filter(item => {
             const titleMatch = item?.title
@@ -127,20 +74,68 @@ const RssFeedScreen = () => {
           });
 
           setFilterData(filteredResults);
+          setSearchLoading(false);
         } else {
           setFilterData([]);
+          setSearchLoading(false);
         }
-        setSearchLoading(false);
       }
     } catch (error) {
-      console.log('Error fetching filtered content:', error.message);
-      setFilterData([]);
-    } finally {
-      setSearchLoading(false);
+      console.error('Error fetching filtered content:', error.message);
     }
   };
 
-  //logic for the get fetching the categogriess from the API
+  const RssfeedGetApi = async () => {
+    if (currentpage === 1) {
+      setloading(true);
+    }
+
+    try {
+      const response = await axios.get(
+        `http://192.168.18.127:8000/api/rss-feed/index?page_type=allFeeds&page=${currentpage}`,
+        {
+          headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (response?.data?.responseCode === 200) {
+        const newFeeds = response?.data?.payload?.feeds?.data || [];
+        setLastpage(response?.data?.payload?.feeds?.last_page);
+
+        const updatedFeeds = newFeeds.filter(
+          newFeed =>
+            !rssData.some(existingFeed => existingFeed.id === newFeed.id),
+        );
+
+        setRssData(prevData => [...prevData, ...updatedFeeds]);
+      }
+    } catch (error) {
+      console.error('Error fetching RSS feeds:', error);
+    } finally {
+      setloading(false);
+      setPaginationLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    RssfeedGetApi();
+  }, [currentpage]);
+
+  const handleLoadMore = () => {
+    if (
+      !loading &&
+      !paginationLoading &&
+      !searchQuery &&
+      currentpage < lastpage
+    ) {
+      setPaginationLoading(true);
+      setCurrentpage(prevPage => prevPage + 1);
+    }
+  };
+
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
@@ -162,7 +157,6 @@ const RssFeedScreen = () => {
     }
   };
 
-  //Post categories ids logic for the API to get data of categories
   const handleSave = async () => {
     setSaveLoading(true);
     try {
@@ -186,34 +180,29 @@ const RssFeedScreen = () => {
         setSearchQuery('');
       }
     } catch (error) {
-      console.log('Error fetching categories:', error);
+      console.error('Error fetching categories:', error);
     } finally {
       setSaveLoading(false);
     }
   };
 
-  //Ids base selection of the categories
   const toggleCategorySelection = id => {
     setSelectedIds(prevSelectedIds => {
       if (prevSelectedIds.includes(id)) {
-        // Deselect the category
         return prevSelectedIds.filter(itemId => itemId !== id);
       } else {
-        // Select the category
         return [...prevSelectedIds, id];
       }
     });
-    setSearchQuery(''); // Reset search query
+    setSearchQuery('');
   };
 
-  //Modal open logic
   const handleModalOpen = () => {
-    setSelectedIds([...selectedIds]); // Ensure the modal opens with the current selection
+    setSelectedIds([...selectedIds]);
     setModalVisible(true);
-    fetchCategories(); // Fetch categories when the modal opens
+    fetchCategories();
   };
 
-  //Modal closing logic
   const handleModalClose = () => {
     setSelectedIds([]);
     setModalVisible(false);
@@ -221,11 +210,9 @@ const RssFeedScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header text  */}
       <View style={styles.header}>
         <Text style={styles.headertext}>Palsome</Text>
       </View>
-      {/* Back button, Rss Feed text and Modal button */}
       <View style={styles.rowContainer}>
         <TouchableOpacity>
           <Image
@@ -241,7 +228,6 @@ const RssFeedScreen = () => {
           />
         </TouchableOpacity>
       </View>
-      {/*Search Box for the searching of Queries*/}
       <View style={styles.searchbox}>
         <View style={styles.inputContainer}>
           <Icon name="search" size={20} color="gray" style={styles.icon} />
@@ -256,8 +242,14 @@ const RssFeedScreen = () => {
       </View>
       {/* Conditionally render filtered or full RSS data */}
       {searchLoading ? (
-        <ActivityIndicator size={'large'} color={'#DF4B38'} />
-      ) : searchQuery.length > 0 && filterData.length === 0 ? (
+        <ActivityIndicator
+          size="large"
+          color="#DF4B38"
+          style={{marginTop: 20}}
+        />
+      ) : searchQuery.length > 0 &&
+        filterData.length === 0 &&
+        !searchLoading ? (
         <View style={styles.noResultContainer}>
           <Image
             source={require('../assets/icon/nosearch.png')}
@@ -270,7 +262,6 @@ const RssFeedScreen = () => {
         </View>
       ) : rssData.length === 0 && !loading ? (
         <ScrollView>
-          {/* remainder icon and text on the body */}
           <View style={styles.defaultContainer}>
             <View style={styles.defaultContainer}>
               <View style={styles.iconContainer}>
@@ -329,7 +320,11 @@ const RssFeedScreen = () => {
           onEndReachedThreshold={0.5} // Trigger when 50% from the bottom
           ListFooterComponent={
             paginationLoading && (
-              <ActivityIndicator size={'large'} color={'#DF4B38'} />
+              <ActivityIndicator
+                size="large"
+                color="#DF4B38"
+                style={{margin: 20}}
+              />
             )
           }
         />
@@ -357,7 +352,7 @@ const RssFeedScreen = () => {
             {data.length === 0 ? (
               <ActivityIndicator
                 size={'large'}
-                color={'#DF4B38'}
+                color={'red'}
                 style={{margin: 30}}
               />
             ) : (
@@ -390,7 +385,7 @@ const RssFeedScreen = () => {
               disabled={saveLoading} // Disable button during save
             >
               {saveLoading ? (
-                <ActivityIndicator size={'small'} color={'white'} />
+                <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text style={styles.saveButtonText}>Save</Text>
               )}
@@ -408,7 +403,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: 'white',
   },
   header: {
     backgroundColor: '#DF4B38',
