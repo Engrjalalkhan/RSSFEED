@@ -20,7 +20,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 const RssFeedScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]); // Array to store selected category ids
+  const [selectedIds, setSelectedIds] = useState([]);
   const [data, setData] = useState([]);
   const [rssData, setRssData] = useState([]);
   const [loading, setloading] = useState(false);
@@ -94,7 +94,7 @@ const RssFeedScreen = () => {
         } finally {
           setSearchLoading(false);
         }
-      }, 1000);
+      }, 3000);
     };
 
   const RssfeedGetApi = async () => {
@@ -206,6 +206,13 @@ const RssFeedScreen = () => {
         return [...prevSelectedIds, id];
       }
     });
+    setData(prevData =>
+      prevData.map(item =>
+        item.id === id
+          ? {...item, is_selected: !item.is_selected}
+          : item
+      )
+    );
     setSearchQuery('');
   };
 
