@@ -182,7 +182,7 @@ const RssFeedScreen = () => {
         setSearchQuery('');
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.log('Error fetching categories:', error);
     } finally {
       setSaveLoading(false);
     }
