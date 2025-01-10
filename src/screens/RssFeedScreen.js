@@ -94,7 +94,7 @@ const RssFeedScreen = () => {
         } finally {
           setSearchLoading(false);
         }
-      }, 5000);
+      }, 1000);
     };
 
   const RssfeedGetApi = async () => {
