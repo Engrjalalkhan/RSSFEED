@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 import axios from 'axios';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -31,58 +31,71 @@ const RssFeedScreen = () => {
   const [paginationLoading, setPaginationLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [lastpage, setLastpage] = useState(false);
+  const searchTimeout = useRef(null);
+
 
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
-  const handleSearch = async query => {
-    setSearchQuery(query);
-    if (query.trim() === '') {
-      setSearchLoading(false);
-      setFilterData([]);
-      return;
-    }
-    if (searchQuery) {
+    const handleSearch = query => {
+      setSearchQuery(query);
+      if (query.trim() === '') {
+        setSearchLoading(false);
+        setFilterData([]);
+        return;
+      }
+
       setSearchLoading(true);
-    }
 
-    try {
-      const response = await axios.get(
-        'http://192.168.18.127:8000/api/rss-feed/search',
-        {
-          params: {search_value: query},
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
 
-      if (response?.data?.responseCode === 200) {
-        const feeds = response?.data?.payload?.feeds;
+      if (searchTimeout.current) {
+        clearTimeout(searchTimeout.current);
+      }
 
-        if (feeds?.length > 0) {
-          const feedsArray = Object.values(feeds);
-          const filteredResults = feedsArray.filter(item => {
-            const titleMatch = item?.title
-              ?.toLowerCase()
-              ?.includes(query.toLowerCase());
-            const descriptionMatch = item?.desc
-              ?.toLowerCase()
-              ?.includes(query.toLowerCase());
-            return titleMatch || descriptionMatch;
-          });
-            setFilterData(filteredResults);
-            setSearchLoading(false);
-        } else {
-          setFilterData([]);
+
+      searchTimeout.current = setTimeout(async () => {
+        try {
+          const response = await axios.get(
+            'http://192.168.18.127:8000/api/rss-feed/search',
+            {
+              params: {search_value: query},
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            },
+          );
+
+          if (response?.data?.responseCode === 200) {
+            const feeds = response?.data?.payload?.feeds;
+
+            if (feeds?.length > 0) {
+              const feedsArray = Object.values(feeds);
+              const filteredResults = feedsArray.filter(item => {
+                const titleMatch = item?.title
+                  ?.toLowerCase()
+                  ?.includes(query.toLowerCase());
+                const descriptionMatch = item?.desc
+                  ?.toLowerCase()
+                  ?.includes(query.toLowerCase());
+                return titleMatch || descriptionMatch;
+              });
+
+              setFilterData(filteredResults);
+            } else {
+              setFilterData([]);
+            }
+          } else {
+            setFilterData([]);
+          }
+        } catch (error) {
+          console.log('Error fetching filtered content:', error.message);
+          setSearchLoading(false);
+        } finally {
           setSearchLoading(false);
         }
-      }
-    } catch (error) {
-      console.log('Error fetching filtered content:', error.message);
-    }
-  };
+      }, 5000);
+    };
 
   const RssfeedGetApi = async () => {
     if (currentpage === 1) {
@@ -247,8 +260,7 @@ const RssFeedScreen = () => {
           style={{marginTop: 20}}
         />
       ) : searchQuery.length > 0 &&
-        filterData.length === 0 &&
-        !searchLoading ? (
+        filterData.length === 0 ? (
         <View style={styles.noResultContainer}>
           <Image
             source={require('../assets/icon/nosearch.png')}
