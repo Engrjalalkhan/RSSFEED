@@ -328,7 +328,7 @@ const RssFeedScreen = () => {
           )}
           columnWrapperStyle={styles.columnWrapper}
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5} // Trigger when 50% from the bottom
+          onEndReachedThreshold={0.5}
           ListFooterComponent={
             paginationLoading && (
               <ActivityIndicator
@@ -393,7 +393,7 @@ const RssFeedScreen = () => {
             <TouchableOpacity
               style={styles.saveButton}
               onPress={handleSave}
-              disabled={saveLoading} // Disable button during save
+              disabled={saveLoading}
             >
               {saveLoading ? (
                 <ActivityIndicator size="small" color="white" />
