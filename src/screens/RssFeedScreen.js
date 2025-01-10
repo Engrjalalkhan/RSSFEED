@@ -67,7 +67,7 @@ const RssFeedScreen = () => {
           );
 
           if (response?.data?.responseCode === 200) {
-            const feeds = response?.data?.payload?.feeds;
+            const feeds = response?.data?.payload?.feeds?.data;
 
             if (feeds?.length > 0) {
               const feedsArray = Object.values(feeds);
