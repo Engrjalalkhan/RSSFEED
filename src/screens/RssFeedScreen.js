@@ -72,14 +72,11 @@ const RssFeedScreen = () => {
               ?.includes(query.toLowerCase());
             return titleMatch || descriptionMatch;
           });
-
-          if (filteredResults.length > 0) {
             setFilterData(filteredResults);
-          } else {
-            setFilterData([]);
-          }
+            setSearchLoading(false);
         } else {
           setFilterData([]);
+          setSearchLoading(false);
         }
       }
     } catch (error) {
