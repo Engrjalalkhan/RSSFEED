@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   Linking,
   FlatList,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -31,6 +32,7 @@ const RssFeedScreen = () => {
   const [paginationLoading, setPaginationLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [lastpage, setLastpage] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const searchTimeout = useRef(null);
 
 
@@ -146,6 +148,14 @@ const RssFeedScreen = () => {
       setCurrentpage(prevPage => prevPage + 1);
     }
   };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setCurrentpage(1);
+    await RssfeedGetApi();
+    setRefreshing(false);
+  };
+
 
   const fetchCategories = async () => {
     try {
@@ -343,6 +353,14 @@ const RssFeedScreen = () => {
                 style={{margin: 20}}
               />
             )
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#DF4B38']}
+              tintColor="#DF4B38"
+            />
           }
         />
       )}
