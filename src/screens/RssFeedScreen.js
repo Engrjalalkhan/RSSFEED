@@ -47,7 +47,6 @@ const RssFeedScreen = () => {
 
       setSearchLoading(true);
 
-
       if (searchTimeout.current) {
         clearTimeout(searchTimeout.current);
       }
@@ -67,7 +66,7 @@ const RssFeedScreen = () => {
           );
 
           if (response?.data?.responseCode === 200) {
-            const feeds = response?.data?.payload?.feeds?.data;
+            const feeds = response?.data?.payload?.feeds;
 
             if (feeds?.length > 0) {
               const feedsArray = Object.values(feeds);
