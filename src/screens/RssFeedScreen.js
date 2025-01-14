@@ -292,14 +292,16 @@ const RssFeedScreen = () => {
             value={searchQuery}
             onChangeText={handleSearch}
           />
-          <Icon name="search" size={20} style={styles.icon} />
+          <TouchableOpacity onPress={() => handleSearch(searchQuery)}>
+            <Icon name="search" size={20} style={styles.icon} />
+          </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={toggleViewMode}>
           <Icon
             name={isListView ? 'grid' : 'list'}
             size={25}
-            color="red"
-            style={{ paddingLeft: 20, marginTop: 7 }}
+            color="#DF4B38"
+            style={{ paddingLeft: 10, marginTop: 6 }}
           />
         </TouchableOpacity>
       </View>
@@ -347,41 +349,47 @@ const RssFeedScreen = () => {
           key={isListView ? 'list' : 'grid'}
           numColumns={isListView ? 1 : 2}
           columnWrapperStyle={!isListView && styles.gridContainer}
-          renderItem={({ item }) => (
-            <View
-              style={[
-                styles.cardContainer,
-                isListView ? styles.cardContainerSingle : styles.cardContainerSingleGrid,
-                filterData.length === 1 && isListView,
-              ]}
-            >
-              <TouchableOpacity
-                onPress={() => {
-                  if (item.parma_link) {
-                    Linking.openURL(item.parma_link).catch(err =>
-                      console.error('Error opening link:', err),
-                    );
-                  }
-                }}
+          renderItem={({ item }) => {
+            const imageSource = item.thumbnail
+              ? { uri: item.thumbnail }
+              : require('../assets/download.png');
+
+            return (
+              <View
+                style={[
+                  styles.cardContainer,
+                  isListView ? styles.cardContainerSingle : styles.cardContainerSingleGrid,
+                  filterData.length === 1 && isListView,
+                ]}
               >
-                <Image
-                  source={{ uri: item.thumbnail }}
-                  style={styles.thumbnail}
-                />
-                <View style={styles.cardContent}>
-                  <Text style={styles.title} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.body} numberOfLines={3}>
-                    {item.desc}
-                  </Text>
-                  <Text style={styles.time} numberOfLines={1}>
-                    {item.time}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          )}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (item.parma_link) {
+                      Linking.openURL(item.parma_link).catch(err =>
+                        console.error('Error opening link:', err),
+                      );
+                    }
+                  }}
+                >
+                  <Image
+                    source={imageSource}
+                    style={styles.thumbnail}
+                  />
+                  <View style={styles.cardContent}>
+                    <Text style={styles.title} numberOfLines={1}>
+                      {item.title}
+                    </Text>
+                    <Text style={styles.body} numberOfLines={3}>
+                      {item.desc}
+                    </Text>
+                    <Text style={styles.time} numberOfLines={1}>
+                      {item.time}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            );
+          }}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
@@ -402,6 +410,7 @@ const RssFeedScreen = () => {
             />
           }
         />
+
       )}
 
       {/* Modal with zoom animation */}
@@ -528,7 +537,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   icon: {
-    position: 'absolute',
     right: 10,
     color: '#DF4B38',
   },
