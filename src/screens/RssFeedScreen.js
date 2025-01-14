@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
     borderColor: '#DF4B38',
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,
-    height: 170,
+    height: 150,
   },
   title: {
     fontSize: 16,
@@ -673,8 +673,8 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 14,
     color: 'black',
-    marginBottom: 10,
     padding: 10,
+    bottom: 10,
   },
   cardContainerSingle: {
     margin: 10,
