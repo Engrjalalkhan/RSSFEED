@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -237,8 +238,29 @@ const RssFeedScreen = () => {
     setModalVisible(false);
   };
 
-  const toggleViewMode = () => {
-    setIsListView(prevState => !prevState);
+  useEffect(() => {
+    const loadViewMode = async () => {
+      try {
+        const savedViewMode = await AsyncStorage.getItem('viewMode');
+        if (savedViewMode !== null) {
+          setIsListView(savedViewMode === 'list');
+        }
+      } catch (error) {
+        console.log('Error loading view mode:', error);
+      }
+    };
+
+    loadViewMode();
+  }, []);
+
+  const toggleViewMode = async () => {
+    try {
+      const newViewMode = !isListView;
+      setIsListView(newViewMode);
+      await AsyncStorage.setItem('viewMode', newViewMode ? 'list' : 'grid');
+    } catch (error) {
+      console.log('Error saving view mode:', error);
+    }
   };
 
   return (
@@ -329,8 +351,8 @@ const RssFeedScreen = () => {
             <View
               style={[
                 styles.cardContainer,
-                isListView ? null : { width: '48%' },
-                filterData.length === 1 && isListView && styles.cardContainerSingle,
+                isListView ? styles.cardContainerSingle : styles.cardContainerSingleGrid,
+                filterData.length === 1 && isListView,
               ]}
             >
               <TouchableOpacity
@@ -353,7 +375,7 @@ const RssFeedScreen = () => {
                   <Text style={styles.body} numberOfLines={3}>
                     {item.desc}
                   </Text>
-                  <Text style={styles.body} numberOfLines={1}>
+                  <Text style={styles.time} numberOfLines={1}>
                     {item.time}
                   </Text>
                 </View>
@@ -380,9 +402,6 @@ const RssFeedScreen = () => {
             />
           }
         />
-
-
-
       )}
 
       {/* Modal with zoom animation */}
@@ -609,7 +628,7 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 10,
+    marginRight: 180,
   },
   cardContainer: {
     margin: 5,
@@ -651,10 +670,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 10,
   },
+  time: {
+    fontSize: 14,
+    color: 'black',
+    marginBottom: 10,
+    padding: 10,
+  },
   cardContainerSingle: {
     margin: 10,
     width: '95%',
-    marginRight: 180,
+  },
+  cardContainerSingleGrid: {
+    width: 180,
   },
   noResultContainer: {
     justifyContent: 'center',
