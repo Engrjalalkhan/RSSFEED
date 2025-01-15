@@ -97,7 +97,7 @@ const RssFeedScreen = () => {
       } finally {
         setSearchLoading(false);
       }
-    }, 2500);
+    }, 500);
   };
 
   const RssfeedGetApi = async () => {
@@ -160,6 +160,9 @@ const RssFeedScreen = () => {
 
 
   const fetchCategories = async () => {
+    if(data.length === 0){
+      setloading(true);
+    }
     try {
       const response = await axios.get(
         'http://192.168.18.127:8000/api/rss-feed/select-rss-feed',
@@ -172,11 +175,16 @@ const RssFeedScreen = () => {
       );
 
       if (response?.data?.responseCode === 200) {
-        setData(response?.data?.payload?.feed_types);
-        setloading(false);
+        const feedTypes = response?.data?.payload?.feed_types || [];
+        setData(Array.isArray(feedTypes) ? feedTypes : []);
+      } else {
+        setData([]);
       }
     } catch (error) {
       console.log('Error fetching categories:', error);
+      setData([]);
+    } finally {
+      setloading(false);
     }
   };
 
@@ -230,6 +238,7 @@ const RssFeedScreen = () => {
   const handleModalOpen = () => {
     setSelectedIds([...selectedIds]);
     setModalVisible(true);
+    // setloading(true);
     fetchCategories();
   };
 
@@ -353,6 +362,7 @@ const RssFeedScreen = () => {
             const imageSource = item.thumbnail
               ? { uri: item.thumbnail }
               : require('../assets/download.png');
+            const description = item.desc?.trim() || 'Click on card to view details';
 
             return (
               <View
@@ -380,11 +390,13 @@ const RssFeedScreen = () => {
                       {item.title}
                     </Text>
                     <Text style={styles.body} numberOfLines={3}>
-                      {item.desc}
+                      {description}
                     </Text>
-                    <Text style={styles.time} numberOfLines={1}>
-                      {item.time}
-                    </Text>
+                    <View style={styles.timeContainer}>
+                      <Text style={styles.time} numberOfLines={1}>
+                        {item.time}
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -432,12 +444,14 @@ const RssFeedScreen = () => {
                 />
               </TouchableOpacity>
             </View>
-            {data.length === 0 ? (
+            {loading ? (
               <ActivityIndicator
-                size={'large'}
-                color={'red'}
+                size="large"
+                color="red"
                 style={{ margin: 30 }}
               />
+            ) : data.length === 0 ? (
+              <Text style={{ margin: 10 }}>No Feeds available</Text>
             ) : (
               data.map(item => (
                 <View key={item.id} style={styles.categories}>
@@ -678,11 +692,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 10,
   },
+  timeContainer: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    right: 10,
+  },
   time: {
     fontSize: 14,
     color: 'black',
-    padding: 10,
-    bottom: 10,
   },
   cardContainerSingle: {
     margin: 10,
