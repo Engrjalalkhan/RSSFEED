@@ -19,7 +19,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-
+import { useNavigation } from '@react-navigation/native';
 const RssFeedScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -36,6 +36,7 @@ const RssFeedScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [isListView, setIsListView] = useState(true);
   const searchTimeout = useRef(null);
+  const Navigation = useNavigation();
 
 
   const token =
@@ -160,7 +161,8 @@ const RssFeedScreen = () => {
 
 
   const fetchCategories = async () => {
-    if(data.length === 0){
+    setloading(false);
+    if (!data.length === 0 && !loading) {
       setloading(true);
     }
     try {
@@ -238,7 +240,6 @@ const RssFeedScreen = () => {
   const handleModalOpen = () => {
     setSelectedIds([...selectedIds]);
     setModalVisible(true);
-    // setloading(true);
     fetchCategories();
   };
 
@@ -278,7 +279,7 @@ const RssFeedScreen = () => {
         <Text style={styles.headertext}>Palsome</Text>
       </View>
       <View style={styles.rowContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => Navigation.navigate('Splash')}>
           <Image
             source={require('../assets/icon/arrow-left.jpg')}
             style={styles.backicon}
@@ -362,7 +363,7 @@ const RssFeedScreen = () => {
             const imageSource = item.thumbnail
               ? { uri: item.thumbnail }
               : require('../assets/download.png');
-            const description = item.desc?.trim() || 'Click on card to view details';
+            const description = item.desc?.trim() || 'Click the card to view details';
 
             return (
               <View
@@ -444,13 +445,13 @@ const RssFeedScreen = () => {
                 />
               </TouchableOpacity>
             </View>
-            {loading ? (
+            {data.length === 0 ? (
               <ActivityIndicator
                 size="large"
                 color="red"
                 style={{ margin: 30 }}
               />
-            ) : data.length === 0 ? (
+            ) : loading ? (
               <Text style={{ margin: 10 }}>No Feeds available</Text>
             ) : (
               data.map(item => (
