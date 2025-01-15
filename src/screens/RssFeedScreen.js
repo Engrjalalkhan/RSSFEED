@@ -293,7 +293,7 @@ const RssFeedScreen = () => {
             onChangeText={handleSearch}
           />
           <TouchableOpacity onPress={() => handleSearch(searchQuery)}>
-            <Icon name="search" size={20} style={styles.icon} />
+            <Icon name="search" size={25} style={styles.icon} />
           </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={toggleViewMode}>
@@ -301,7 +301,7 @@ const RssFeedScreen = () => {
             name={isListView ? 'grid' : 'list'}
             size={25}
             color="#DF4B38"
-            style={{ paddingLeft: 10, marginTop: 6 }}
+            style={{ paddingLeft: 10, marginTop: 7 }}
           />
         </TouchableOpacity>
       </View>
@@ -426,7 +426,7 @@ const RssFeedScreen = () => {
               <TouchableOpacity onPress={handleModalClose}>
                 <Icon
                   name="close"
-                  size={24}
+                  size={25}
                   color="white"
                   style={styles.closeIcon}
                 />
@@ -508,8 +508,8 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   backicon: {
-    width: 25,
-    height: 25,
+    width: 27,
+    height: 27,
     borderRadius: 20,
     elevation: 10,
   },
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '90%',
+    width: '95%',
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '113%',
+    width: '112%',
     alignItems: 'center',
     marginBottom: 15,
     borderBottomWidth: 1,
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
   },
   closeIcon: {
     backgroundColor: '#2C3E50',
-    borderRadius: 15,
+    borderRadius: 25,
     right: 20,
   },
   saveButton: {
