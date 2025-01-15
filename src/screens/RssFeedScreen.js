@@ -363,7 +363,7 @@ const RssFeedScreen = () => {
             const imageSource = item.thumbnail
               ? { uri: item.thumbnail }
               : require('../assets/download.png');
-            const description = item.desc?.trim() || 'Click the card to view details';
+            const description = item.desc?.trim() || 'Click to view details';
 
             return (
               <View
