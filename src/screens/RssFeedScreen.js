@@ -451,7 +451,7 @@ const RssFeedScreen = () => {
                 color="red"
                 style={{ margin: 30 }}
               />
-            ) : loading ? (
+            ) : data.length === 0 && loading ? (
               <Text style={{ margin: 10 }}>No Feeds available</Text>
             ) : (
               data.map(item => (
