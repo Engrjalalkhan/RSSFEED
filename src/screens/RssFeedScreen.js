@@ -16,7 +16,9 @@ import {
   ActivityIndicator,
   Linking,
   FlatList,
+  useColorScheme,
   RefreshControl,
+  Switch,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -35,8 +37,19 @@ const RssFeedScreen = () => {
   const [lastpage, setLastpage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isListView, setIsListView] = useState(true);
+  const systemColorScheme = useColorScheme();
+  const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
   const searchTimeout = useRef(null);
   const Navigation = useNavigation();
+
+  useEffect(() => {
+    setIsDarkMode(systemColorScheme === 'dark');
+  }, [systemColorScheme]);
+
+  const handleToggleSwitch = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+  const styles = getDynamicStyles(isDarkMode);
 
 
   const token =
@@ -286,6 +299,13 @@ const RssFeedScreen = () => {
           />
         </TouchableOpacity>
         <Text style={styles.Rsstext}>RSS Feed</Text>
+        <Switch
+          value={isDarkMode}
+          onValueChange={handleToggleSwitch}
+          thumbColor={isDarkMode ? '#fff' : 'gray'}
+          trackColor={{ false: '#ccc', true: '#DF4B38' }}
+          style={{ right: 50 }}
+        />
         <TouchableOpacity onPress={handleModalOpen}>
           <Image
             source={require('../assets/icon/plus-icon.png')}
@@ -297,7 +317,7 @@ const RssFeedScreen = () => {
         <View style={styles.inputContainer}>
           <TextInput
             placeholder="Search RSS Feed..."
-            placeholderTextColor={'gray'}
+            placeholderTextColor={isDarkMode ? '#DADADA' : 'gray'}
             style={styles.input}
             value={searchQuery}
             onChangeText={handleSearch}
@@ -310,12 +330,12 @@ const RssFeedScreen = () => {
           <Icon
             name={isListView ? 'grid' : 'list'}
             size={25}
-            color="#DF4B38"
+            color={isDarkMode ? '#FF6F61' : '#DF4B38'}
             style={{ paddingLeft: 10, marginTop: 7 }}
           />
         </TouchableOpacity>
       </View>
-      {/* Conditionally render filtered or full RSS data */}
+
       {searchLoading ? (
         <ActivityIndicator
           size="large"
@@ -344,14 +364,14 @@ const RssFeedScreen = () => {
               <Text style={styles.bodytext}>
                 You haven't selected any feed yet.
               </Text>
-              <Text style={{ fontSize: 14 }}>
+              <Text style={{ fontSize: 14, color: isDarkMode ? '#DADADA' : 'black' }}>
                 Selected RSS Feed will appear here.
               </Text>
             </View>
           </View>
         </ScrollView>
       ) : loading ? (
-        <ActivityIndicator size={'large'} color={'#DF4B38'} />
+        <ActivityIndicator size="large" color={'#DF4B38'} />
       ) : (
         <FlatList
           data={searchQuery.length === 0 ? rssData : filterData}
@@ -440,7 +460,7 @@ const RssFeedScreen = () => {
                 <Icon
                   name="close"
                   size={25}
-                  color="white"
+                  color={isDarkMode ? '#202020' : 'white'}
                   style={styles.closeIcon}
                 />
               </TouchableOpacity>
@@ -448,7 +468,7 @@ const RssFeedScreen = () => {
             {data.length === 0 ? (
               <ActivityIndicator
                 size="large"
-                color="red"
+                color="#DF4B38"
                 style={{ margin: 30 }}
               />
             ) : loading ? (
@@ -497,10 +517,11 @@ const RssFeedScreen = () => {
 
 export default RssFeedScreen;
 
-const styles = StyleSheet.create({
+const getDynamicStyles = (isDarkMode) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
   },
   header: {
     backgroundColor: '#DF4B38',
@@ -512,7 +533,7 @@ const styles = StyleSheet.create({
   },
   headertext: {
     fontSize: 16,
-    color: 'white',
+    color: isDarkMode ? '#FFFFFF' : 'white',
     textAlign: 'center',
   },
   rowContainer: {
@@ -532,12 +553,13 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
     borderRadius: 20,
+    right: 45,
   },
   Rsstext: {
     fontSize: 24,
-    color: 'black',
+    color: isDarkMode ? '#FFFFFF' : 'black',
     fontWeight: '500',
-    marginHorizontal: 10,
+    marginHorizontal: 100,
   },
   searchbox: {
     flexDirection: 'row',
@@ -546,20 +568,22 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'lightgray',
+    backgroundColor: isDarkMode ? '#2C2C2C' : 'lightgray',
     borderRadius: 10,
     width: '90%',
+    borderColor: isDarkMode ? '#DADADA' : 'lightgray',
+    borderWidth: 1,
     position: 'relative',
   },
   icon: {
     right: 10,
-    color: '#DF4B38',
+    color: isDarkMode ? '#FF6F61' : '#DF4B38',
   },
   input: {
     height: 40,
     flex: 1,
     paddingLeft: 40,
-    color: 'black',
+    color: isDarkMode ? '#FFFFFF' : 'black',
     right: 20,
   },
   defaultContainer: {
@@ -567,7 +591,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainer: {
-    backgroundColor: '#2C3E50',
+    backgroundColor: isDarkMode ? '#424242' : '#2C3E50',
     borderRadius: 50,
     padding: 20,
     justifyContent: 'center',
@@ -576,19 +600,19 @@ const styles = StyleSheet.create({
   bodytext: {
     fontSize: 16,
     paddingTop: 30,
-    color: 'black',
+    color: isDarkMode ? '#DADADA' : 'black',
     fontWeight: '500',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     width: '95%',
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: isDarkMode ? '#1F1F1F' : 'white',
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -599,54 +623,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: 'lightgray',
+    borderBottomColor: isDarkMode ? '#444' : 'lightgray',
     paddingBottom: 5,
   },
   modalHeaderText: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: isDarkMode ? '#DADADA' : '#000000',
     left: 20,
   },
   closeIcon: {
-    backgroundColor: '#2C3E50',
+    backgroundColor: isDarkMode ? '#DADADA' : '#2C3E50',
     borderRadius: 25,
     right: 20,
+    bottom: 3,
   },
   saveButton: {
-    backgroundColor: '#DF4B38',
+    backgroundColor: isDarkMode ? '#FF6F61' : '#DF4B38',
     padding: 10,
     borderRadius: 5,
     width: '100%',
     alignItems: 'center',
   },
   saveButtonText: {
-    color: 'white',
+    color: isDarkMode ? '#DADADA' : 'white',
     fontSize: 16,
-  },
-  categories: {
-    borderRadius: 5,
-    width: '100%',
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  categoriestext: {
-    paddingTop: 7,
-    fontSize: 16,
-    left: 20,
-  },
-  savedDataContainer: {
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  savedDataText: {
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   savedDataDetails: {
     fontSize: 16,
     marginTop: 10,
+    color: isDarkMode === 'dark' ? '#FFFFFF' : '#000000',
   },
   gridContainer: {
     flexDirection: 'row',
@@ -656,10 +662,10 @@ const styles = StyleSheet.create({
   cardContainer: {
     margin: 5,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: isDarkMode === 'dark' ? '#2C2C2C' : '#FFFFFF',
     elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: isDarkMode === 'dark' ? 0.2 : 0.1,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     width: '97%',
@@ -672,15 +678,16 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     borderWidth: 1,
-    borderColor: '#DF4B38',
+    borderColor: isDarkMode === 'dark' ? '#DF4B38' : '#DF4B38',
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,
     height: 150,
+    backgroundColor: isDarkMode === 'dark' ? '#3C3C3C' : '#FFFFFF',
   },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#FFFFFF',
     backgroundColor: '#DF4B38',
     height: 40,
     paddingTop: 7,
@@ -689,7 +696,7 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: 14,
-    color: 'black',
+    color: isDarkMode === 'dark' ? '#FFFFFF' : '#000000',
     marginBottom: 10,
     padding: 10,
   },
@@ -701,14 +708,16 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 14,
-    color: 'black',
+    color: isDarkMode === 'dark' ? '#FFFFFF' : '#000000',
   },
   cardContainerSingle: {
     margin: 10,
     width: '95%',
+    backgroundColor: isDarkMode === 'dark' ? '#2C2C2C' : '#FFFFFF',
   },
   cardContainerSingleGrid: {
     width: 180,
+    backgroundColor: isDarkMode === 'dark' ? '#2C2C2C' : '#FFFFFF',
   },
   noResultContainer: {
     justifyContent: 'center',
@@ -717,7 +726,8 @@ const styles = StyleSheet.create({
   },
   noResultText: {
     fontSize: 16,
-    color: '#888',
+    color: isDarkMode === 'dark' ? '#BBBBBB' : '#888888',
     fontWeight: 'bold',
   },
 });
+
