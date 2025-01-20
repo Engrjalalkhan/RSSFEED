@@ -16,7 +16,9 @@ import {
   ActivityIndicator,
   Linking,
   FlatList,
+  useColorScheme,
   RefreshControl,
+  Switch,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -35,15 +37,26 @@ const RssFeedScreen = () => {
   const [lastpage, setLastpage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isListView, setIsListView] = useState(true);
+  const systemColorScheme = useColorScheme();
+  const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
   const searchTimeout = useRef(null);
   const Navigation = useNavigation();
+
+  useEffect(() => {
+    setIsDarkMode(systemColorScheme === 'dark');
+  }, [systemColorScheme]);
+
+  const handleToggleSwitch = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+  const styles = getDynamicStyles(isDarkMode);
 
 
   const token =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiYTg1OGQyMTk2NTk1YzQwZDliYmVhNTdmOWVlMTdkNjkwZTdmZmQ1NDQ3ODM3NmNhOGY4Nzg3ZjQyY2YwMGIzYjc3YTdhZDEzMWM4ZDczMzYiLCJpYXQiOjE3MzU2MzA1MDEuOTIwMTc3LCJuYmYiOjE3MzU2MzA1MDEuOTIwMTgxLCJleHAiOjE3NjcxNjY1MDEuOTAxNDUzLCJzdWIiOiIxNCIsInNjb3BlcyI6W119.vOcLVAKKwSAHm8SaHHyMT3wCIzUYCot-N9yKGD5dJd-FuuHcvbR0syYVQORprbwd7jTgXajaazQsrq5EnMVNL3SamBxN3We56k8Z1bzqaTJ4tSVX4bDkk8cJVtav_y9UjmPOJlyzKh0BdfRJWrA08ySlLAlblKS83lhxSIPkpxxuSHEn4a64IdW6UeCe21D3CicGBMo6GPgea5qpC5DBUBsVihxGjS-aDUBo4_1UFmKtpsJJR7ghQbLlAxOBsx3j2pjfDy5T6I-wyTLn9Md2JIyGQv-vMkvfzBnbDTGwwk3ba3CW9GPWDCFhBuZ-RKL_gIRCebgp4fvATykYV7_tMosjLGlOfPHWxDT5gH9iJtqiiJsW9hBsmQmYQY8yT0GT-Y_dRfVPma6v95Fh3vvVYBXvcFJFySpt4Tprhzlg95BrU7Pc4Fr0YMqXgvr_IKFZBS5wGWxXZqXmiv086DrMaJ_9Fsq-3pjgwX8iyrRKQML7j0Uji4U0vDYzKRTz_nJhVn6zB4Qv9awSHMGGKvXcVBGYVhSzjaajKnx9FLsoxS9e5NmgyHQJ6GPQHFUHv_cjXp6yi_5CbmLZzKeseVngWPGt-Kk0LxCmhJUdjj7r4qVr5NSibZ-6urHi7xcoYOb1NBCrxzh68iVGjvOlXD86QefLCAabocE9oRTrdBm42-s';
 
   const handleSearch = query => {
-    setSearchQuery(query);
+    setSearchQuery();
     if (query.trim() === '') {
       setSearchLoading(false);
       setFilterData([]);
@@ -163,7 +176,7 @@ const RssFeedScreen = () => {
   const fetchCategories = async () => {
     setloading(false);
     if (!data.length === 0 && !loading) {
-      setloading(false);
+      setloading(true);
     }
     try {
       const response = await axios.get(
@@ -238,8 +251,8 @@ const RssFeedScreen = () => {
   };
 
   const handleModalOpen = () => {
-    setSelectedIds([...selectedIds]);
     setModalVisible(true);
+    setSelectedIds([...selectedIds]);
     fetchCategories();
   };
 
@@ -286,6 +299,13 @@ const RssFeedScreen = () => {
           />
         </TouchableOpacity>
         <Text style={styles.Rsstext}>RSS Feed</Text>
+        <Switch
+          value={isDarkMode}
+          onValueChange={handleToggleSwitch}
+          thumbColor={isDarkMode ? '#fff' : 'gray'}
+          trackColor={{ false: '#ccc', true: '#DF4B38' }}
+          style={{ right: 65 }}
+        />
         <TouchableOpacity onPress={handleModalOpen}>
           <Image
             source={require('../assets/icon/plus-icon.png')}
@@ -297,7 +317,7 @@ const RssFeedScreen = () => {
         <View style={styles.inputContainer}>
           <TextInput
             placeholder="Search RSS Feed..."
-            placeholderTextColor={'gray'}
+            placeholderTextColor={isDarkMode ? '#DADADA' : 'gray'}
             style={styles.input}
             value={searchQuery}
             onChangeText={handleSearch}
@@ -310,7 +330,7 @@ const RssFeedScreen = () => {
           <Icon
             name={isListView ? 'grid' : 'list'}
             size={25}
-            color="#DF4B38"
+            color={isDarkMode ? '#DF4B38' : '#DF4B38'}
             style={{ paddingLeft: 10, marginTop: 7 }}
           />
         </TouchableOpacity>
@@ -327,10 +347,10 @@ const RssFeedScreen = () => {
         <View style={styles.noResultContainer}>
           <Image
             source={require('../assets/icon/nosearch.png')}
-            style={{ width: 30, height: 40 }}
+            style={{ width: 30, height: 40, tintColor: isDarkMode ? '#DADADA' : 'black' }}
           />
           <Text style={styles.noResultText}>No Record Found</Text>
-          <Text style={{ fontSize: 14, color: 'gray' }}>
+          <Text style={{ fontSize: 14, color: isDarkMode ? '#DADADA' : 'black' }}>
             What you searched was unfortunately not found.
           </Text>
         </View>
@@ -344,7 +364,7 @@ const RssFeedScreen = () => {
               <Text style={styles.bodytext}>
                 You haven't selected any feed yet.
               </Text>
-              <Text style={{ fontSize: 14 }}>
+              <Text style={{ fontSize: 14, color: isDarkMode ? '#DADADA' : 'black' }}>
                 Selected RSS Feed will appear here.
               </Text>
             </View>
@@ -377,7 +397,7 @@ const RssFeedScreen = () => {
                   onPress={() => {
                     if (item.parma_link) {
                       Linking.openURL(item.parma_link).catch(err =>
-                        console.log('Error opening link:', err),
+                        console.error('Error opening link:', err),
                       );
                     }
                   }}
@@ -440,7 +460,7 @@ const RssFeedScreen = () => {
                 <Icon
                   name="close"
                   size={25}
-                  color="white"
+                  color={isDarkMode ? '#202020' : 'white'}
                   style={styles.closeIcon}
                 />
               </TouchableOpacity>
@@ -448,11 +468,11 @@ const RssFeedScreen = () => {
             {data.length === 0 ? (
               <ActivityIndicator
                 size="large"
-                color="red"
+                color="#DF4B38"
                 style={{ margin: 30 }}
               />
             ) : loading ? (
-              <Text style={{ margin: 10 }}>No Feeds available</Text>
+              <Text style={{ margin: 10, color: isDarkMode ? '#DADADA' : 'black' }}>No Feeds available</Text>
             ) : (
               data.map(item => (
                 <View key={item.id} style={styles.categories}>
@@ -497,10 +517,11 @@ const RssFeedScreen = () => {
 
 export default RssFeedScreen;
 
-const styles = StyleSheet.create({
+const getDynamicStyles = (isDarkMode) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: isDarkMode ? '#202020' : '#FFFFFF',
   },
   header: {
     backgroundColor: '#DF4B38',
@@ -532,12 +553,13 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
     borderRadius: 20,
+    right: 60,
   },
   Rsstext: {
     fontSize: 24,
-    color: 'black',
+    color: isDarkMode ? '#FFFFFF' : 'black',
     fontWeight: '500',
-    marginHorizontal: 10,
+    marginHorizontal: '30%',
   },
   searchbox: {
     flexDirection: 'row',
@@ -546,20 +568,22 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'lightgray',
+    backgroundColor: isDarkMode ? '#2C2C2C' : 'lightgray',
     borderRadius: 10,
+    borderColor: isDarkMode ? '#DADADA' : 'lightgray',
+    borderWidth: 1,
     width: '90%',
     position: 'relative',
   },
   icon: {
     right: 10,
-    color: '#DF4B38',
+    color: isDarkMode ? '#FF6F61' : '#DF4B38',
   },
   input: {
     height: 40,
     flex: 1,
     paddingLeft: 40,
-    color: 'black',
+    color: isDarkMode ? '#FFFFFF' : 'black',
     right: 20,
   },
   defaultContainer: {
@@ -567,7 +591,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainer: {
-    backgroundColor: '#2C3E50',
+    backgroundColor: isDarkMode ? '#424242' : '#2C3E50',
     borderRadius: 50,
     padding: 20,
     justifyContent: 'center',
@@ -576,51 +600,52 @@ const styles = StyleSheet.create({
   bodytext: {
     fontSize: 16,
     paddingTop: 30,
-    color: 'black',
+    color: isDarkMode ? '#DADADA' : 'black',
     fontWeight: '500',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: isDarkMode ? 'rgba(65, 65, 65, 0.5)' : 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     width: '95%',
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: isDarkMode ? '#202020' : 'white',
     borderRadius: 10,
     alignItems: 'center',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '112%',
+    width: '111%',
     alignItems: 'center',
     marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: 'lightgray',
+    borderBottomColor: isDarkMode ? '#DADADA' : 'lightgray',
     paddingBottom: 5,
   },
   modalHeaderText: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: isDarkMode ? '#DADADA' : '#000000',
     left: 20,
   },
   closeIcon: {
-    backgroundColor: '#2C3E50',
+    backgroundColor: isDarkMode ? '#DADADA' : '#2C3E50',
     borderRadius: 25,
     right: 20,
   },
   saveButton: {
-    backgroundColor: '#DF4B38',
+    backgroundColor: isDarkMode ? '#DF4B38' : '#DF4B38',
     padding: 10,
     borderRadius: 5,
     width: '100%',
     alignItems: 'center',
   },
   saveButtonText: {
-    color: 'white',
+    color: isDarkMode ? 'white' : 'white',
     fontSize: 16,
   },
   categories: {
@@ -634,20 +659,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     left: 20,
   },
-  savedDataContainer: {
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  savedDataText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  savedDataDetails: {
-    fontSize: 16,
-    marginTop: 10,
-  },
   gridContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -655,14 +666,16 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     margin: 5,
-    borderRadius: 8,
-    backgroundColor: '#fff',
+    borderRadius: 10,
+    backgroundColor: isDarkMode === 'dark' ? '#2C2C2C' : '#FFFFFF',
     elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: isDarkMode === 'dark' ? 0.2 : 0.1,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     width: '97%',
+    borderWidth: 0.5,
+    borderColor: isDarkMode ? '#DADADA' : 'white',
   },
   thumbnail: {
     width: '100%',
@@ -676,6 +689,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,
     height: 150,
+    backgroundColor: isDarkMode ? '#202020' : '#FFFFFF',
   },
   title: {
     fontSize: 16,
@@ -689,7 +703,7 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: 14,
-    color: 'black',
+    color: isDarkMode ? '#FFFFFF' : '#000000',
     marginBottom: 10,
     padding: 10,
   },
@@ -701,14 +715,16 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 14,
-    color: 'black',
+    color: isDarkMode ? '#FFFFFF' : '#000000',
   },
   cardContainerSingle: {
     margin: 10,
     width: '95%',
+    backgroundColor: isDarkMode === 'dark' ? '#2C2C2C' : '#FFFFFF',
   },
   cardContainerSingleGrid: {
     width: 180,
+    backgroundColor: isDarkMode === 'dark' ? '#2C2C2C' : '#FFFFFF',
   },
   noResultContainer: {
     justifyContent: 'center',
@@ -717,7 +733,7 @@ const styles = StyleSheet.create({
   },
   noResultText: {
     fontSize: 16,
-    color: '#888',
     fontWeight: 'bold',
+    color: isDarkMode ? 'white' : 'black',
   },
 });
