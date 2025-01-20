@@ -3,13 +3,11 @@ import {
     View,
     Image,
     StyleSheet,
-    useColorScheme,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const SplashScreen = () => {
     const navigation = useNavigation();
-    const colorScheme = useColorScheme();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -19,10 +17,8 @@ const SplashScreen = () => {
         return () => clearTimeout(timer);
     }, [navigation]);
 
-    const backgroundColor = colorScheme === 'dark' ? '#000000' : '#ffffff';
-
     return (
-        <View style={[styles.container, { backgroundColor }]}>
+        <View style={[styles.container]}>
             <Image
                 source={require('../assets/logo.png')}
                 style={[styles.logo]}
