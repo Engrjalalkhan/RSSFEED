@@ -304,7 +304,7 @@ const RssFeedScreen = () => {
           onValueChange={handleToggleSwitch}
           thumbColor={isDarkMode ? '#fff' : 'gray'}
           trackColor={{ false: '#ccc', true: '#DF4B38' }}
-          style={{ right: 80 }}
+          style={{ right: 65 }}
         />
         <TouchableOpacity onPress={handleModalOpen}>
           <Image
